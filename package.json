@@ -1,7 +1,7 @@
 {
-  "name": "ts",
+  "name": "whatsapp-api",
   "version": "1.0.0",
-  "description": "",
+  "description": "A initial REST api template using whiskeysockets/baileys to send messages/files and execute commands",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
