@@ -5,8 +5,8 @@ import { rmSync } from 'fs';
 
 export type WhatsappClient = ReturnType<typeof makeWASocket>;
 
-export class WhatsappService {
-  private static instance: WhatsappService;
+export class Whatsapp {
+  private static instance: Whatsapp;
 
   public client: WhatsappClient;
   static clientConnected: boolean = false;
@@ -34,7 +34,7 @@ export class WhatsappService {
       const { connection, lastDisconnect, isOnline } = update;
 
       if (connection === 'open') {
-        WhatsappService.clientConnected = true;
+        Whatsapp.clientConnected = true;
         console.log('Conectado!');
         client.ev.flush();
         //That works??
@@ -42,7 +42,7 @@ export class WhatsappService {
       }
 
       if (connection === 'close') {
-        WhatsappService.clientConnected = false;
+        Whatsapp.clientConnected = false;
         const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
 
         console.log('connection closed due to ', lastDisconnect?.error?.message, ', reconnecting ', shouldReconnect);
@@ -69,14 +69,14 @@ export class WhatsappService {
     });
   }
 
-  public static async getInstance(): Promise<WhatsappService> {
-    return new Promise<WhatsappService>((resolve, reject) => {
-      if (!WhatsappService.instance) WhatsappService.instance = new WhatsappService();
+  public static async getInstance(): Promise<Whatsapp> {
+    return new Promise<Whatsapp>((resolve, reject) => {
+      if (!Whatsapp.instance) Whatsapp.instance = new Whatsapp();
 
       const interval = setInterval(() => {
-        if (WhatsappService.clientConnected) {
+        if (Whatsapp.clientConnected) {
           clearInterval(interval);
-          resolve(WhatsappService.instance);
+          resolve(Whatsapp.instance);
         }
       }, 1000);
     });
