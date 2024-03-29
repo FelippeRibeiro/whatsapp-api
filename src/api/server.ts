@@ -1,22 +1,23 @@
 import express, { Express } from 'express';
-import multer from 'multer';
 import { logger } from '../lib/logger';
 import { WhatsappController } from './modules/whatsapp/Whatsapp.controller';
 import { Whatsapp } from '../services/whatsapp';
+import { ErrorHandler } from './middlewares/errors.middleware';
 
-const PORT = process.env['PORT'] || 3333;
+const ENVPORT = Number(process.env['PORT']) || 3333;
 
 export class API {
   app: Express;
 
-  constructor(PORT: number) {
+  constructor(PORT?: number) {
     this.app = express();
     this.app.use(express.json());
-    this.start();
+    this.start(PORT);
   }
-  private async start() {
+  private async start(PORT?: number) {
     await this.loadRouters();
-    this.listen(3333);
+    this.listen(PORT || ENVPORT);
+    this.app.use(ErrorHandler);
   }
   private listen(port: number) {
     this.app.listen(port, () => {

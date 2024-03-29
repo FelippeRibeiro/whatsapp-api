@@ -1,5 +1,4 @@
 import 'dotenv/config';
-console.log('Hello world!');
 
 import { API } from './api/server';
 
