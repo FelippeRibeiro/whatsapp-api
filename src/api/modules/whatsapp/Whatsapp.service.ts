@@ -63,4 +63,15 @@ export class WhatsappService {
       }
     }
   };
+  public joinGroup = async (req: Request, res: Response) => {
+    try {
+      const { link } = req.body;
+      const code = link.split('.com/')[1];
+      const group = await this.whatsapp.client.groupAcceptInvite(code);
+      console.log(group);
+      res.status(200).json({ status: true });
+    } catch (error) {
+      res.status(500).json({ status: false });
+    }
+  };
 }

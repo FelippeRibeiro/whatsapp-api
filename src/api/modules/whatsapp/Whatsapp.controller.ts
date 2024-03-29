@@ -12,5 +12,6 @@ export class WhatsappController {
     const whatsappService = new WhatsappService(whatsappClient);
     this.router.post('/whatsapp/message', whatsappService.sendMessage);
     this.router.post('/whatsapp/file', upload.fields([{ name: 'file', maxCount: 1 }, { name: 'message' }, { name: 'to' }]), whatsappService.sendFile);
+    this.router.post('/whatsapp/join', whatsappService.joinGroup);
   }
 }
