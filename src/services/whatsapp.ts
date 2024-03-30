@@ -67,6 +67,40 @@ export class Whatsapp {
         await client.sendMessage(update.messages[0].key.remoteJid!, { text: 'pong' });
       }
     });
+
+    // // Estudando eventos
+    // [
+    //   'connection.update',
+    //   'creds.update',
+    //   'messaging-history.set',
+    //   'chats.upsert',
+    //   'chats.update',
+    //   'chats.phoneNumberShare',
+    //   'chats.delete',
+    //   'presence.update',
+    //   'contacts.upsert',
+    //   'contacts.update',
+    //   'messages.delete',
+    //   'messages.update',
+    //   'messages.media-update',
+    //   'messages.upsert',
+    //   'messages.reaction',
+    //   'message-receipt.update',
+    //   'groups.upsert',
+    //   'groups.update',
+    //   'group-participants.update',
+    //   'blocklist.set',
+    //   'blocklist.update',
+    //   'call',
+    //   'labels.edit',
+    //   'labels.association',
+    // ].forEach((event) => {
+    //   client.ev.on(event as BaileysEvent, (update) => {
+    //     console.log(event);
+    //     if (event == 'messaging-history.set' && (update as any).isLatest == false) return;
+    //     writeFileSync(`${event}.json`, JSON.stringify(update));
+    //   });
+    // });
   }
 
   public static async getInstance(): Promise<Whatsapp> {
