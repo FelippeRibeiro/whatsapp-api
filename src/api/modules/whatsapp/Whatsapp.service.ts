@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { Whatsapp } from '../../../services/whatsapp';
+import { Whatsapp } from '../../../services/whatsapp/whatsapp';
 import { validNumber } from '../../../util/valideNumber';
-import { AnyMessageContent } from '@whiskeysockets/baileys';
 export class WhatsappService {
   whatsapp: Whatsapp;
   constructor(whatsappClient: Whatsapp) {

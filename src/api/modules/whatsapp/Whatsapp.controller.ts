@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { WhatsappService } from './Whatsapp.service';
-import { Whatsapp } from '../../../services/whatsapp';
+import { Whatsapp } from '../../../services/whatsapp/whatsapp';
 import { notConnectedHandler } from '../../middlewares/notConnected.middleware';
 import multer from 'multer';
 const upload = multer();

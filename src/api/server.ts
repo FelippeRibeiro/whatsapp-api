@@ -1,7 +1,7 @@
 import express, { Express } from 'express';
 import { logger } from '../lib/logger';
 import { WhatsappController } from './modules/whatsapp/Whatsapp.controller';
-import { Whatsapp } from '../services/whatsapp';
+import { Whatsapp } from '../services/whatsapp/whatsapp';
 import { ErrorHandler } from './middlewares/errors.middleware';
 
 const ENVPORT = Number(process.env['PORT']) || 3333;

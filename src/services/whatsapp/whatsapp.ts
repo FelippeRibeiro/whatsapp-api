@@ -2,6 +2,7 @@ import makeWASocket, { DisconnectReason, useMultiFileAuthState, Browsers } from 
 import { Boom } from '@hapi/boom';
 import pino from 'pino';
 import { rmSync } from 'fs';
+import { messageUpserts } from './message.upsert';
 
 export type WhatsappClient = ReturnType<typeof makeWASocket>;
 
@@ -59,14 +60,7 @@ export class Whatsapp {
     });
 
     client.ev.on('creds.update', saveCreds);
-    client.ev.on('messages.upsert', async (update) => {
-      if (!update.messages[0].message) return;
-      const msg = update.messages[0].message;
-      const text = msg.conversation || msg.extendedTextMessage?.text;
-      if (text === 'ping') {
-        await client.sendMessage(update.messages[0].key.remoteJid!, { text: 'pong' });
-      }
-    });
+    client.ev.on('messages.upsert', (update) => messageUpserts(update, client).catch((er) => console.log));
 
     // // Estudando eventos
     // [
