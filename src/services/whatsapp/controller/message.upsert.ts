@@ -1,5 +1,7 @@
 import makeWASocket, { MessageUpsertType, proto } from '@whiskeysockets/baileys';
 import { getTextContent } from '../utils/getTextMessage';
+import { getMessageType } from '../utils/getMessageType';
+import { MessageCollector } from '../utils/messageCollector';
 
 export async function messageUpserts(
   update: { messages: proto.IWebMessageInfo[]; type: MessageUpsertType },
@@ -9,8 +11,7 @@ export async function messageUpserts(
   if (!msg.message) return;
   if (msg.key.fromMe) return;
   if (msg.key.remoteJid === 'status@broadcast' || msg.key.remoteJid!.endsWith('@g.us')) return;
-  const messageType = Object.keys(msg.message)[0];
+  const messageType = getMessageType(msg);
   const from: string = String(msg.key.remoteJid);
-  console.log(getTextContent(msg));
   return;
 }
