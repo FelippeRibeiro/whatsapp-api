@@ -3,6 +3,7 @@ import { logger } from '../lib/logger';
 import { WhatsappController } from './modules/whatsapp/Whatsapp.controller';
 import { Whatsapp } from '../services/whatsapp/whatsapp';
 import { ErrorHandler } from './middlewares/errors.middleware';
+import { AuthController } from './modules/auth-module/Auth.controller';
 
 const ENVPORT = Number(process.env['PORT']) || 3333;
 
@@ -28,5 +29,6 @@ export class API {
     const whatsappClient = await Whatsapp.getInstance();
     const whatsappController = new WhatsappController(whatsappClient);
     this.app.use(whatsappController.router);
+    this.app.use(new AuthController().router);
   }
 }
