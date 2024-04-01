@@ -2,7 +2,7 @@ import makeWASocket, { DisconnectReason, useMultiFileAuthState, Browsers } from 
 import { Boom } from '@hapi/boom';
 import pino from 'pino';
 import { rmSync } from 'fs';
-import { messageUpserts } from './message.upsert';
+import { messageUpserts } from './controller/message.upsert';
 
 export type WhatsappClient = ReturnType<typeof makeWASocket>;
 
