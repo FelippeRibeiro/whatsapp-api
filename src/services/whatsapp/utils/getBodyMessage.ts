@@ -35,6 +35,12 @@ export function getMessageBody({ message }: WAMessage): string | undefined {
         message.buttonsResponseMessage?.selectedButtonId ||
         message.listResponseMessage?.singleSelectReply?.selectedRowId ||
         message.conversation ||
+        message.viewOnceMessage?.message?.imageMessage?.caption ||
+        message.viewOnceMessage?.message?.videoMessage?.caption ||
+        message.viewOnceMessageV2?.message?.videoMessage?.caption ||
+        message.viewOnceMessageV2?.message?.imageMessage?.caption ||
+        message.viewOnceMessageV2Extension?.message?.imageMessage?.caption ||
+        message.viewOnceMessageV2Extension?.message?.videoMessage?.caption ||
         '';
       break;
   }
