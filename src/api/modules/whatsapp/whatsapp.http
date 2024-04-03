@@ -12,7 +12,12 @@ Content-Length: 55
 
 
 
-### Send file
+# Send file 
+# !! not working in this http file
+# neds a form data with fields file,message and to
+# file field with the files
+# message field with one description to be sent in a unique file
+# to field are the number of destination 
 POST /whatsapp/file HTTP/1.1
 Host: localhost:3333
 Content-Length: 429
