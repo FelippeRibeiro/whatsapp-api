@@ -70,12 +70,13 @@ export class WhatsappService {
   public joinGroup = async (req: Request, res: Response) => {
     try {
       const { link } = req.body;
-      const code = link.split('.com/')[1];
-      const group = await this.whatsapp.client.groupAcceptInvite(code);
-      console.log(group);
-      res.status(200).json({ status: true });
+      const code = link.replace('https://chat.whatsapp.com/', '');
+      console.log({ code });
+      const group = await this.whatsapp.client.groupGetInviteInfo(code);
+      await this.whatsapp.client.groupAcceptInvite(code);
+      res.status(200).json({ status: true, groupName: group.subject, groupId: group.id, ...group });
     } catch (error) {
-      res.status(500).json({ status: false });
+      res.status(500).json({ status: false, message: error instanceof Error ? error.message : '' });
     }
   };
 }
