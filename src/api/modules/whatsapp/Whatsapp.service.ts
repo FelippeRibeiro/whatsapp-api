@@ -9,8 +9,9 @@ export class WhatsappService {
   }
 
   public sendMessage = async (req: Request, res: Response) => {
-    const { number, message } = req.body;
-    await this.whatsapp.client.sendMessage(`${validNumber(number)}@s.whatsapp.net`, { text: message });
+    const { number, message, ignoreNumberValidation } = req.body;
+    const receiver = ignoreNumberValidation ? number : `${validNumber(number)}@s.whatsapp.net`;
+    await this.whatsapp.client.sendMessage(receiver, { text: message });
     res.send({ status: 'ok' });
   };
 
@@ -19,6 +20,8 @@ export class WhatsappService {
       let message = req.body.message || '';
       const to = req.body.to;
       if (!to) return res.status(400).send({ message: 'No receiver provided' });
+      const ignoreNumberValidation = req.body.ignoreNumberValidation === 'true';
+      const receiver = ignoreNumberValidation ? to : `${validNumber(to)}@s.whatsapp.net`;
       const files = (req.files as any)['file'] as Express.Multer.File[];
       const errors: { name: string; message: string }[] = [];
       for (const file of files) {
@@ -26,7 +29,7 @@ export class WhatsappService {
           const type = file.mimetype.split('/')[0];
           switch (type) {
             case 'video':
-              await this.whatsapp.client.sendMessage(`${validNumber(to)}@s.whatsapp.net`, {
+              await this.whatsapp.client.sendMessage(receiver, {
                 video: file.buffer,
                 mimetype: file.mimetype,
                 caption: message,
@@ -34,14 +37,14 @@ export class WhatsappService {
               message = '';
               break;
             case 'audio':
-              await this.whatsapp.client.sendMessage(`${validNumber(to)}@s.whatsapp.net`, {
+              await this.whatsapp.client.sendMessage(receiver, {
                 audio: file.buffer,
                 mimetype: file.mimetype,
               });
               break;
 
             case 'image':
-              await this.whatsapp.client.sendMessage(`${validNumber(to)}@s.whatsapp.net`, {
+              await this.whatsapp.client.sendMessage(receiver, {
                 image: file.buffer,
                 mimetype: file.mimetype,
                 caption: message,
@@ -50,7 +53,7 @@ export class WhatsappService {
               break;
 
             default:
-              await this.whatsapp.client.sendMessage(`${validNumber(to)}@s.whatsapp.net`, {
+              await this.whatsapp.client.sendMessage(receiver, {
                 document: file.buffer,
                 mimetype: file.mimetype,
                 fileName: file.originalname,
