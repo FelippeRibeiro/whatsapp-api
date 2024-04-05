@@ -2,7 +2,7 @@ import makeWASocket, { DisconnectReason, useMultiFileAuthState, Browsers } from 
 import { Boom } from '@hapi/boom';
 import pino from 'pino';
 import { rmSync } from 'fs';
-import { messageUpserts } from './controller/message.upsert';
+import { MessageUpsertController } from './controller/message.upsert';
 
 export type WhatsappClient = ReturnType<typeof makeWASocket>;
 
@@ -60,7 +60,7 @@ export class Whatsapp {
     });
 
     client.ev.on('creds.update', saveCreds);
-    client.ev.on('messages.upsert', (update) => messageUpserts(update, client).catch((er) => console.log));
+    client.ev.on('messages.upsert', (update) => new MessageUpsertController(this.client).handleEvent(update).catch((err) => true));
 
     // // Estudando eventos
     // [
