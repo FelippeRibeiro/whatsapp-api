@@ -12,13 +12,12 @@ export class MessageUpsertController {
     const messageBody = getMessageBody(messageData);
     const messageType = getMessageType(messageData);
 
-    if (!messageProps) return;
-    if (messageData.key.fromMe) return;
-    if (messageData.key.remoteJid === 'status@broadcast' || messageData.key.remoteJid!.endsWith('@g.us')) return;
+    const author = messageData.key.participant ?? messageData.key.remoteJid;
+    const chatJid = messageData.key.remoteJid;
 
-    const from = messageData.key.participant ?? messageData.key.remoteJid;
-    if (!from || !messageProps || !messageType) return;
-    console.log({ messageBody, messageType });
+    if (!author || !messageProps || !messageType || !chatJid || messageData.key.fromMe || chatJid === 'status@broadcast') return;
+
+    console.log({ author, messageBody, messageType });
     return;
   }
 }
