@@ -44,7 +44,7 @@ export class Whatsapp {
         client.ev.flush();
         //That works??
         await client.uploadPreKeysToServerIfRequired();
-        new Jobs(this.client);
+        new Jobs(this.client).setJobs();
       }
 
       if (connection === 'close') {
