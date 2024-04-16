@@ -3,6 +3,7 @@ import { Boom } from '@hapi/boom';
 import pino from 'pino';
 import { rmSync } from 'fs';
 import { MessageUpsertController } from './controller/message.upsert';
+import { Jobs } from './jobs/jobs';
 
 export type WhatsappClient = ReturnType<typeof makeWASocket>;
 
@@ -40,6 +41,7 @@ export class Whatsapp {
         client.ev.flush();
         //That works??
         await client.uploadPreKeysToServerIfRequired();
+        new Jobs(this.client);
       }
 
       if (connection === 'close') {
