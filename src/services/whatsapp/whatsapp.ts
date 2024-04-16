@@ -1,9 +1,11 @@
 import makeWASocket, { DisconnectReason, useMultiFileAuthState, Browsers } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 import pino from 'pino';
-import { rmSync } from 'fs';
+import { readdirSync, rmSync } from 'fs';
 import { MessageUpsertController } from './controller/message.upsert';
 import { Jobs } from './jobs/jobs';
+import { resolve } from 'path';
+import { Command } from './structures/commands';
 
 export type WhatsappClient = ReturnType<typeof makeWASocket>;
 
@@ -12,6 +14,7 @@ export class Whatsapp {
 
   public client: WhatsappClient;
   static clientConnected: boolean = false;
+  commands: Command[] = [];
 
   private constructor() {
     this.client = {} as WhatsappClient;
@@ -62,8 +65,8 @@ export class Whatsapp {
     });
 
     client.ev.on('creds.update', saveCreds);
-    client.ev.on('messages.upsert', (update) => new MessageUpsertController(this.client).handleEvent(update).catch((err) => true));
-
+    client.ev.on('messages.upsert', (update) => new MessageUpsertController(this).handleEvent(update).catch((err) => true));
+    this.loadCommands();
     // // Estudando eventos
     // [
     //   'connection.update',
@@ -99,6 +102,16 @@ export class Whatsapp {
     // });
   }
 
+  loadCommands() {
+    const path = resolve(__dirname, 'commands');
+    const commandFiles = readdirSync(path);
+    for (const commandFile of commandFiles) {
+      const commandPath = resolve(path, commandFile);
+      const Command = require(commandPath).default;
+
+      this.commands.push(new Command(this.client));
+    }
+  }
   public static async getInstance(): Promise<Whatsapp> {
     return new Promise<Whatsapp>((resolve, reject) => {
       if (!Whatsapp.instance) Whatsapp.instance = new Whatsapp();

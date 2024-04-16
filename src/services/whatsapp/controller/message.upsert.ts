@@ -1,23 +1,27 @@
 import { MessageUpsertType, proto } from '@whiskeysockets/baileys';
 import { getMessageType } from '../utils/getMessageType';
 import { getMessageBody } from '../utils/getBodyMessage';
-import { WhatsappClient } from '../whatsapp';
+import { Whatsapp, WhatsappClient } from '../whatsapp';
 
 export class MessageUpsertController {
-  constructor(private instance: WhatsappClient) {}
+  constructor(private instance: Whatsapp) {}
 
   async handleEvent(messagesUpsert: { messages: proto.IWebMessageInfo[]; type: MessageUpsertType }) {
     const messageData = messagesUpsert.messages[0];
     const messageProps = messageData.message;
-    const messageBody = getMessageBody(messageData);
     const messageType = getMessageType(messageData);
+    const messageBody = getMessageBody(messageData);
 
     const author = messageData.key.participant ?? messageData.key.remoteJid;
     const chatJid = messageData.key.remoteJid;
 
-    if (!author || !messageProps || !messageType || !chatJid || messageData.key.fromMe || chatJid === 'status@broadcast') return;
+    if (!author || !messageProps || !messageBody || !messageType || !chatJid || messageData.key.fromMe || chatJid === 'status@broadcast') return;
 
-    console.log({ author, messageBody, messageType });
+    if (messageBody.startsWith('/')) {
+      const [commandQuery, ...args] = messageBody.replace('/', '').split(' ');
+      const command = this.instance.commands.find((cmd) => cmd.name === commandQuery || cmd.aliases?.includes(commandQuery));
+      if (command) command.execute(messageData);
+    }
     return;
   }
 }
