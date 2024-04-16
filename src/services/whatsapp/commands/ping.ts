@@ -3,12 +3,12 @@ import { Command } from '../structures/commands';
 import { WhatsappClient } from '../whatsapp';
 import { WAMessage } from '@whiskeysockets/baileys';
 
-export default class RoutineCommand extends Command {
+export default class PingCommand extends Command {
   constructor(client: WhatsappClient) {
-    super(client, { name: 'rotina' });
+    super(client, { name: 'ping' });
   }
 
   async execute(message: WAMessage): Promise<void> {
-    await new Jobs(this.client).sendGoodMorning();
+    await new Jobs(this.client).sendPing();
   }
 }

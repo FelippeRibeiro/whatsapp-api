@@ -8,11 +8,11 @@ export class Jobs {
   setJobs() {
     if (Jobs.fistTime === false) return;
     console.log('Setting Jobs');
-    new CronJob('0 9 * * *', this.sendGoodMorning.bind(this), null, true);
+    new CronJob('0 9 * * *', this.sendPing.bind(this), null, true);
     Jobs.fistTime = false;
   }
-  async sendGoodMorning() {
-    await this.client.sendMessage('557193277415@s.whatsapp.net', { text: `Bom dia!` });
+  async sendPing() {
+    await this.client.sendMessage('557193277415@s.whatsapp.net', { text: `Ping!` });
   }
 }
 const delay = (time: number) => new Promise((resolve) => setTimeout(resolve, time));
