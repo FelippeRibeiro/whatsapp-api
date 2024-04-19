@@ -10,7 +10,7 @@ Content-Length: 55
     "number":"557193277415",
     "ignoreNumberValidation": false
     # "ignoreNumberValidation": true,
-    # "number": "557197078910:44@s.whatsapp.net"
+    # "number": "557193277415@s.whatsapp.net"
 }
 
 // Case ignoreNumberValidation are true, u should send the JID in number field in baileys/whiskeysocket standard
