@@ -16,4 +16,3 @@ export class Jobs {
   }
 }
 const delay = (time: number) => new Promise((resolve) => setTimeout(resolve, time));
-// 120363041254057068@g.us  //SL Processos Grupo ID

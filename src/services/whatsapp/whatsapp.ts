@@ -23,7 +23,7 @@ export class Whatsapp {
   async connectToWhatsApp() {
     const { saveCreds, state } = await useMultiFileAuthState('auth');
 
-    const client = makeWASocket({
+    this.client = makeWASocket({
       printQRInTerminal: true,
       browser: Browsers.appropriate('Chrome'),
       auth: state,
@@ -33,17 +33,16 @@ export class Whatsapp {
       emitOwnEvents: false,
     });
 
-    this.client = client;
-
-    client.ev.on('connection.update', async (update) => {
-      const { connection, lastDisconnect, isOnline } = update;
+    this.client.ev.on('connection.update', async (update) => {
+      const { connection, lastDisconnect } = update;
+      if (lastDisconnect) console.error(lastDisconnect.error as Boom);
 
       if (connection === 'open') {
         Whatsapp.clientConnected = true;
         console.log('Conectado!');
-        client.ev.flush();
+        this.client.ev.flush();
         //That works??
-        await client.uploadPreKeysToServerIfRequired();
+        await this.client.uploadPreKeysToServerIfRequired();
         new Jobs(this.client).setJobs();
       }
 
@@ -53,7 +52,8 @@ export class Whatsapp {
 
         console.log('connection closed due to ', lastDisconnect?.error?.message, ', reconnecting ', shouldReconnect);
         if (shouldReconnect) {
-          this.connectToWhatsApp();
+          console.log('Reconnecting to whatsapp!!');
+          await this.connectToWhatsApp();
         } else {
           console.log('Excluindo arquivos de autenticação');
           //Send some notification
@@ -64,8 +64,8 @@ export class Whatsapp {
       if (connection === 'connecting') console.log('Conectando');
     });
 
-    client.ev.on('creds.update', saveCreds);
-    client.ev.on('messages.upsert', (update) => new MessageUpsertController(this).handleEvent(update).catch((err) => true));
+    this.client.ev.on('creds.update', saveCreds);
+    this.client.ev.on('messages.upsert', (update) => new MessageUpsertController(this).handleEvent(update).catch((err) => true));
     this.loadCommands();
     // // Estudando eventos
     // [
