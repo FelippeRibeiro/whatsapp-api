@@ -3,7 +3,6 @@ import { Boom } from '@hapi/boom';
 import pino from 'pino';
 import { readdirSync, rmSync } from 'fs';
 import { MessageUpsertController } from './controller/message.upsert';
-import { Jobs } from './jobs/jobs';
 import { resolve } from 'path';
 import { Command } from './structures/commands';
 
@@ -43,7 +42,6 @@ export class Whatsapp {
         this.client.ev.flush();
         //That works??
         await this.client.uploadPreKeysToServerIfRequired();
-        new Jobs(this.client).setJobs();
       }
 
       if (connection === 'close') {
@@ -67,7 +65,6 @@ export class Whatsapp {
     this.client.ev.on('creds.update', saveCreds);
     this.client.ev.on('messages.upsert', (update) => new MessageUpsertController(Whatsapp.instance).handleEvent(update).catch((err) => true));
     this.loadCommands();
-    Whatsapp.instance = this;
   }
 
   loadCommands() {
