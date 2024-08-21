@@ -1,10 +1,6 @@
-import { MessageType, WAMessage } from '@whiskeysockets/baileys';
+import { MessageType, proto } from '@whiskeysockets/baileys';
 
-export function getMessageBody({ message }: WAMessage): string | undefined {
-  if (!message) {
-    return undefined;
-  }
-
+export function getMessageBody(message: proto.IMessage): string {
   const messageType = Object.keys(message)[0] as MessageType;
 
   let body = '';

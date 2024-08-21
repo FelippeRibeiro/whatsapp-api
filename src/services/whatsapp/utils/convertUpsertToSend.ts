@@ -2,7 +2,7 @@ import { AnyMessageContent, downloadMediaMessage, proto } from '@whiskeysockets/
 import { getMessageBody } from './getBodyMessage';
 
 export async function convertIWebMessageInfoToAnyMessageContent(message: proto.IWebMessageInfo): Promise<AnyMessageContent> {
-  const text = getMessageBody(message!) ?? '';
+  const text = getMessageBody(message.message!);
   const {
     audioMessage,
     imageMessage,

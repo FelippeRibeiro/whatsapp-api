@@ -1,8 +1,8 @@
+import { IHandleMessage } from '../interfaces/message.handler.interface';
 import { WhatsappClient } from '../whatsapp';
-import { type WAMessage } from '@whiskeysockets/baileys';
 
 interface ICommand {
-  execute: (message: WAMessage, args: { messageBody: string; author: string }) => Promise<void>;
+  execute: (messagePayload: IHandleMessage, args: string[]) => Promise<any>;
   client: WhatsappClient;
   name: string;
   aliases?: string[];
@@ -20,5 +20,5 @@ export class Command implements ICommand {
     console.log(`Comando ${this.name} carregado!`);
   }
 
-  async execute(message: WAMessage, args: { messageBody: string; author: string }): Promise<void> {}
+  async execute({ author, messageBody, messageData, messageProps }: IHandleMessage, args: string[]) {}
 }
