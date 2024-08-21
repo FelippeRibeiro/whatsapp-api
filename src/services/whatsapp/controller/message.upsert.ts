@@ -4,6 +4,7 @@ import { Whatsapp } from '../whatsapp';
 import { IMessageUpsertEventPayload } from '../interfaces/message.upsert.interface';
 import { IHandleMessage } from '../interfaces/message.handler.interface';
 import { logger } from '../../../lib/logger';
+import { MessageCollector } from '../utils/messageCollector2';
 export class MessageUpsertController {
   constructor(private instance: Whatsapp) {}
 
@@ -24,6 +25,16 @@ export class MessageUpsertController {
     const authorNumber = author!.split('@')[0];
 
     logger.info(`${authorNumber} : (${messageType}) => ${messageBody}`);
+
+    if (MessageCollector.messageCollectorMap.size) {
+      if (MessageCollector.messageCollectorMap.has(author)) {
+        const collector = MessageCollector.messageCollectorMap.get(author);
+        collector!({ author, messageBody, messageData, messageProps, messageType });
+        MessageCollector.messageCollectorMap.delete(author);
+        return;
+      }
+    }
+
     return this.handleMessage({ messageData, author, messageBody, messageProps, messageType });
   }
 
