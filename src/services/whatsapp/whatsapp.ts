@@ -63,7 +63,11 @@ export class Whatsapp {
     });
 
     this.client.ev.on('creds.update', saveCreds);
-    this.client.ev.on('messages.upsert', (update) => new MessageUpsertController(Whatsapp.instance).handleEvent(update).catch((err) => true));
+    this.client.ev.on('messages.upsert', (update) =>
+      new MessageUpsertController(Whatsapp.instance)
+        .handleEvent(update)
+        .catch((err) => console.error('unhandled error on Handle event controller', err))
+    );
     this.loadCommands();
   }
 
