@@ -41,6 +41,11 @@ export function getMessageBody({ message }: WAMessage): string | undefined {
         message.viewOnceMessageV2?.message?.imageMessage?.caption ||
         message.viewOnceMessageV2Extension?.message?.imageMessage?.caption ||
         message.viewOnceMessageV2Extension?.message?.videoMessage?.caption ||
+        message.documentMessage?.caption ||
+        message.imageMessage?.caption ||
+        message.videoMessage?.caption ||
+        message.extendedTextMessage?.text ||
+        message.documentWithCaptionMessage?.message?.documentMessage?.caption ||
         '';
       break;
   }
