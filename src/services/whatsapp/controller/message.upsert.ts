@@ -14,7 +14,9 @@ export class MessageUpsertController {
     if (!messageData.message) return; // Early return if the message has no message core
     if (messageData.key.fromMe) return; // Early return if the message is from the bot
     const chatJid = messageData.key.remoteJid;
+    const isGroup = chatJid?.includes('@g.us');
     if (!chatJid || chatJid === 'status@broadcast') return; // Early return if the message is from a broadcast status
+    if (isGroup) return; // Early return if the message is from a group
 
     const messageType = getMessageType(messageData);
     const author = messageData.key.participant ?? messageData.key.remoteJid;
