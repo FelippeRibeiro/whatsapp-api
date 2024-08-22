@@ -5,6 +5,7 @@ import { IMessageUpsertEventPayload } from '../interfaces/message.upsert.interfa
 import { IHandleMessage } from '../interfaces/message.handler.interface';
 import { logger } from '../../../lib/logger';
 import { MessageCollector } from '../utils/messageCollector2';
+
 export class MessageUpsertController {
   constructor(private instance: Whatsapp) {}
 
@@ -38,7 +39,7 @@ export class MessageUpsertController {
     return this.handleMessage({ messageData, author, messageBody, messageProps, messageType });
   }
 
-  async handleMessage({ messageData, author, messageBody, messageProps, messageType }: IHandleMessage): Promise<void> {
+  private async handleMessage({ messageData, author, messageBody, messageProps, messageType }: IHandleMessage): Promise<void> {
     if (messageBody.startsWith('/')) {
       const [commandQuery, ...args] = messageBody.replace('/', '').split(' ');
       const command = this.instance.commands.find((cmd) => cmd.name === commandQuery || cmd.aliases?.includes(commandQuery));
