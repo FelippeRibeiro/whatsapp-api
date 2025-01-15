@@ -19,12 +19,3 @@ model User {
   email    String
   telefone String @unique
 }
-
-model UserPending {
-  id         Int     @id @default(autoincrement())
-  name       String
-  email      String
-  telefone   String  @unique
-  verifyCode String
-  confirmed  Boolean
-}

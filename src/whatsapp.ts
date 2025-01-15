@@ -1,0 +1,339 @@
+import { Boom } from '@hapi/boom';
+import makeWASocket, {
+  AnyMessageContent,
+  Browsers,
+  delay,
+  DisconnectReason,
+  makeInMemoryStore,
+  MiscMessageGenerationOptions,
+  proto,
+  useMultiFileAuthState,
+  WAConnectionState,
+  WAMessage,
+  WAMessageContent,
+  WAMessageKey,
+  WASocket,
+} from '@whiskeysockets/baileys';
+import { readdirSync, rmSync, writeFileSync } from 'fs';
+import { resolve } from 'path';
+import pino from 'pino';
+import * as qrcode from 'qrcode';
+
+import { MessageUpsertController } from './controller/message.upsert';
+import { IContacts } from './interfaces/contacts';
+import { IInstanceSettings } from './interfaces/instance.settings';
+import { Command } from './structures/commands';
+import { Publisher } from './structures/publisher-subscribers';
+
+export type WhatsappClient = ReturnType<typeof makeWASocket>;
+
+const defaultInstanceSettings: IInstanceSettings = {
+  commandPrefixies: ['/'],
+  enableCommands: true,
+  ignoreCommands: [],
+  ignoreGroups: [],
+  ignoreGroupsMessage: false,
+  ignoreJid: [],
+  ignoreStatusMessage: true,
+  syncHistory: true,
+  admins: ['557193277415'],
+};
+
+export class Whatsapp {
+  instanceName: string = '';
+  public client: WASocket | undefined;
+  clientConnected: boolean = false;
+  conectionStatus: { state: WAConnectionState; statusReason?: number } = { state: 'close' };
+  commands: Command[] = [];
+  conversations: { chatId: string; messages: any[] }[] = [];
+  contacts: IContacts[] = [];
+  settings: IInstanceSettings;
+  qr: { qr: string; base64: string; count: number } = { base64: '', qr: '', count: 0 };
+  store: ReturnType<typeof makeInMemoryStore>;
+  loggerLevel: 'silent' | 'debug' = 'silent';
+  publisher = new Publisher();
+
+  constructor(instanceName: string, settings: IInstanceSettings | null) {
+    if (!instanceName) throw new Error('Instance name is required');
+    this.instanceName = instanceName;
+    this.settings = settings || defaultInstanceSettings;
+    this.store = makeInMemoryStore({});
+    writeFileSync('settings.json', JSON.stringify(this.settings, null, 2));
+  }
+
+  async connectToWhatsApp() {
+    try {
+      const { saveCreds, state } = await useMultiFileAuthState(`auth/${this.instanceName}`);
+      this.client = makeWASocket({
+        printQRInTerminal: true,
+        browser: Browsers.appropriate('safari'),
+        auth: state,
+        logger: pino({ level: this.loggerLevel }) as any,
+        markOnlineOnConnect: true,
+        emitOwnEvents: false,
+        generateHighQualityLinkPreview: true,
+        syncFullHistory: this.settings.syncHistory,
+        qrTimeout: 45_000,
+      });
+      this.client.ev.on('creds.update', saveCreds);
+      this.eventsHandlers();
+      if (this.settings.enableCommands) this.loadCommands();
+      this.loadSubscribers();
+      this.loadJobs();
+
+      // if (!this.client.authState.creds.registered) {
+      //     await delay(10000);
+      //     const pairingCode = await this.client.requestPairingCode('557192126020');
+      //     const formattedPairingCode = `${pairingCode.slice(0, 4)}-${pairingCode.slice(4)}`;
+      //     console.log({ formattedPairingCode, pairingCode });
+      // }
+      return this;
+    } catch (error) {
+      console.error('Error on connectToWhatsApp', error);
+      // rmSync(`auth/${this.instanceName}`);
+      throw error;
+    }
+  }
+
+  async reconnectToWhatsapp() {
+    try {
+      const { saveCreds, state } = await useMultiFileAuthState(`auth/${this.instanceName}`);
+      this.client = makeWASocket({
+        printQRInTerminal: true,
+        browser: Browsers.appropriate('safari'),
+        auth: state,
+        logger: pino({ level: this.loggerLevel }) as any,
+        markOnlineOnConnect: true,
+        emitOwnEvents: false,
+        generateHighQualityLinkPreview: true,
+        syncFullHistory: this.settings.syncHistory,
+        qrTimeout: 45_000,
+      });
+      this.client.ev.on('creds.update', saveCreds);
+      this.eventsHandlers();
+    } catch (error) {
+      if (error instanceof Error) console.error('Error reconnecting to whatsapp', error.message);
+      throw error;
+    }
+  }
+
+  private eventsHandlers() {
+    if (!this.client) return;
+    this.store.readFromFile('store.json');
+    setInterval(() => this.store.writeToFile('store.json'), 10_000);
+    this.store.bind(this.client.ev);
+
+    this.client.ev.on('connection.update', async (update) => {
+      const { connection, lastDisconnect, qr } = update;
+      if (lastDisconnect) console.error(lastDisconnect.error as Boom);
+
+      if (qr) {
+        this.qr.count++;
+        this.qr.qr = qr;
+        qrcode.toDataURL(qr, (err, url) => {
+          if (err) return;
+          this.qr.base64 = url;
+        });
+      }
+
+      if (connection) {
+        this.conectionStatus = {
+          state: connection,
+          statusReason: (lastDisconnect?.error as Boom)?.output?.statusCode ?? 200,
+        };
+      }
+      if (connection === 'open') {
+        this.clientConnected = true;
+        console.log(`Conectado!`, this.instanceName);
+      }
+
+      if (connection === 'close') {
+        this.clientConnected = false;
+        const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
+
+        console.error('connection closed due to ', lastDisconnect?.error?.message, ', reconnecting ', shouldReconnect, this.instanceName);
+        if (shouldReconnect) {
+          console.warn('Reconnecting to whatsapp!!', this.instanceName);
+
+          //Reconnect to whatsapp or kill aplication
+          await Promise.race([
+            this.reconnectToWhatsapp(),
+            new Promise(async () => {
+              await delay(20000);
+              if (this.clientConnected) return;
+              console.error('Reconnect strategy took a long time, closing the app!');
+              resolve(process.exit(1));
+            }),
+          ]);
+        } else {
+          console.warn('Excluindo arquivos de autenticação', this.instanceName);
+          //Send some notification
+          rmSync('auth', { recursive: true, force: true });
+          if (lastDisconnect?.error?.message !== 'Intentional Logout') this.connectToWhatsApp();
+        }
+      }
+      if (connection === 'connecting') console.log('Conectando', this.instanceName);
+    });
+
+    this.client.ev.on('call', async (calls) => {
+      await this.client?.rejectCall(calls[0].id, calls[0].from);
+      if (this.settings.admins.includes(calls[0].from)) return;
+      await this.client?.updateBlockStatus(calls[0].from, 'block');
+    });
+
+    const messageUpsertController = new MessageUpsertController(this);
+    this.client.ev.on('messages.upsert', (update) => messageUpsertController.handleEvent(update).catch((err) => console.error('unhandled error on Handle event controller', err)));
+  }
+
+  async waitForClientConnection() {
+    return new Promise((resolve) => {
+      if (this.clientConnected) resolve(true);
+      const checker = setInterval(() => {
+        if (!this.clientConnected) return;
+        clearInterval(checker);
+
+        resolve(true);
+      });
+    });
+  }
+
+  async getMessage(key: WAMessageKey): Promise<WAMessageContent | undefined> {
+    if (this.store) {
+      const msg = await this.store.loadMessage(key.remoteJid!, key.id!);
+      return msg?.message || undefined;
+    }
+    return proto.Message.fromObject({});
+  }
+
+  getQuotedMessage({ message }: WAMessage): { quotedMessage: proto.IMessage; quotedAuthor: null | string | undefined } | undefined {
+    const messageContextInfo = message?.extendedTextMessage?.contextInfo;
+    if (!messageContextInfo) return undefined;
+    const quotedMessage = messageContextInfo.quotedMessage;
+    if (!quotedMessage) return undefined;
+    return { quotedMessage, quotedAuthor: messageContextInfo.participant };
+  }
+
+  public async profilePicture(jid: string) {
+    try {
+      if (!this.client) throw new Error('Client not connected');
+      return {
+        wuid: jid,
+        profilePictureUrl: await this.client.profilePictureUrl(jid, 'image'),
+      };
+    } catch (error) {
+      return {
+        wuid: jid,
+        profilePictureUrl: null,
+      };
+    }
+  }
+
+  public async getInfo() {
+    const defaultInfo = {
+      name: this.instanceName,
+      connected: this.clientConnected,
+      settings: this.settings,
+      conectionStatus: this.conectionStatus,
+      qr: this.qr,
+    };
+
+    if (this.client?.authState.creds.me)
+      return {
+        ...defaultInfo,
+        auth: this.client.authState.creds.me || null,
+        photo: await this.profilePicture(this.client.authState.creds.me.id),
+      };
+    return {
+      auth: null,
+      photo: null,
+      ...defaultInfo,
+    };
+  }
+
+  public getMessages(chatId: string) {
+    if (!this.client) throw new Error('Client not connected');
+
+    const messages = this.store.messages[chatId].toJSON().sort((a, b) => parseInt(String(a.messageTimestamp)) - parseInt(String(b.messageTimestamp)));
+
+    return messages;
+  }
+
+  public async sendMessage(jid: string, content: AnyMessageContent, options?: MiscMessageGenerationOptions) {
+    if (!this.client) throw new Error('Client not Connected');
+    const message = await this.client.sendMessage(jid, content, options);
+    return message;
+  }
+
+  getMessageMentions(message: WAMessage) {
+    const extendedTextMessage = message.message?.extendedTextMessage;
+    const contextInfo = extendedTextMessage?.contextInfo;
+    return contextInfo?.mentionedJid;
+  }
+
+  public async getChats() {
+    const chats = this.store.chats.all().map((chat) => ({
+      id: chat.id,
+      name: chat.name || chat.displayName || chat.username || chat.id.split('@')[0],
+      messages: this.getMessages(chat.id).at(-1),
+      unreadCount: chat.unreadCount,
+      pinned: chat.pinned,
+      archived: chat.archived,
+      isParentGroup: chat.isParentGroup,
+      isDefaultSubgroup: chat.isDefaultSubgroup,
+    }));
+    return chats;
+  }
+
+  public async logout() {
+    if (this.client) {
+      await this.client.logout();
+      await delay(1500);
+      const ev = this.client.ev;
+      ev.removeAllListeners('blocklist.set');
+      ev.removeAllListeners('messages.upsert');
+      ev.removeAllListeners('messages.update');
+      ev.removeAllListeners('connection.update');
+      ev.removeAllListeners('chats.upsert');
+      ev.removeAllListeners('contacts.update');
+      ev.removeAllListeners('messaging-history.set');
+      ev.removeAllListeners('call');
+      ev.removeAllListeners('creds.update');
+    }
+  }
+
+  loadCommands() {
+    if (this.commands.length) this.commands = [];
+    const path = resolve(__dirname, 'commands');
+    const commandFiles = readdirSync(path).filter((file) => file.endsWith('.ts') || file.endsWith('.js'));
+    for (const commandFile of commandFiles) {
+      const commandPath = resolve(path, commandFile);
+      const Command = require(commandPath).default;
+      this.commands.push(new Command(this));
+    }
+    console.log(`Comandos carregados: [${this.commands.map((c) => c.name)}]`);
+  }
+
+  loadSubscribers() {
+    if (this.publisher.subscribers.length) this.publisher.subscribers = [];
+    const path = resolve(__dirname, 'subscribers');
+    const subscribersFiles = readdirSync(path).filter((file) => file.endsWith('.ts') || file.endsWith('.js'));
+
+    for (const subscriber of subscribersFiles) {
+      const subscriberPath = resolve(path, subscriber);
+      const SubscriberClass = require(subscriberPath).default;
+      this.publisher.addSubscriber(new SubscriberClass(this));
+    }
+    console.log(`Subscriber registrados: [ ${this.publisher.subscribers.length} ]`);
+  }
+  loadJobs() {
+    try {
+      const path = resolve(__dirname, 'jobs');
+      const jobFiles = readdirSync(path).filter((file) => file.endsWith('.ts') || file.endsWith('.js'));
+      for (const jobFile of jobFiles) {
+        const jobPath = resolve(path, jobFile);
+        const Job = require(jobPath).default;
+        this.commands.push(new Job(this));
+      }
+    } catch (error) {}
+  }
+}

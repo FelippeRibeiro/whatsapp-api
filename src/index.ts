@@ -1,15 +1,28 @@
-import 'dotenv/config';
+import { readFileSync } from 'fs';
+import { Whatsapp } from './whatsapp';
 
-import { API } from './api/server';
-import { Jobs } from './services/jobs/jobs';
+async function main() {
+  const settings = JSON.parse(readFileSync('./settings.json', 'utf-8')) || {
+    commandPrefixies: ['/', '!', '.'],
+    enableCommands: true,
+    ignoreCommands: [],
+    ignoreGroups: [],
+    ignoreGroupsMessage: false,
+    ignoreJid: [],
+    ignoreStatusMessage: true,
+    syncHistory: true,
+    admins: ['557193277415'],
+  };
 
-const Server = new API(3333);
-new Jobs().setJobs();
+  const client = new Whatsapp('butterbot', settings);
+  client.connectToWhatsApp();
+}
 
-process.on('uncaughtException', (e) => {
-  console.error('uncaughtException', e.message);
+main();
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.log('Unhandled Rejection at:', promise, 'reason:', reason);
 });
-
-process.on('unhandledRejection', (e) => {
-  console.log('unhandledRejection', e);
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
 });
