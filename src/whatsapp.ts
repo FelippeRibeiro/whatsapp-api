@@ -14,7 +14,7 @@ import makeWASocket, {
   WAMessageKey,
   WASocket,
 } from '@whiskeysockets/baileys';
-import { readdirSync, rmSync, writeFileSync } from 'fs';
+import { existsSync, readdirSync, rmSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import pino from 'pino';
 import * as qrcode from 'qrcode';
@@ -41,7 +41,7 @@ const defaultInstanceSettings: IInstanceSettings = {
 
 export class Whatsapp {
   instanceName: string = '';
-  public client: WASocket | undefined;
+  client: WASocket | undefined;
   clientConnected: boolean = false;
   conectionStatus: { state: WAConnectionState; statusReason?: number } = { state: 'close' };
   commands: Command[] = [];
@@ -49,26 +49,26 @@ export class Whatsapp {
   contacts: IContacts[] = [];
   settings: IInstanceSettings;
   qr: { qr: string; base64: string; count: number } = { base64: '', qr: '', count: 0 };
-  store: ReturnType<typeof makeInMemoryStore>;
-  loggerLevel: 'silent' | 'debug' = 'silent';
+  store: ReturnType<typeof makeInMemoryStore> | undefined;
+
   publisher = new Publisher();
 
   constructor(instanceName: string, settings: IInstanceSettings | null) {
     if (!instanceName) throw new Error('Instance name is required');
     this.instanceName = instanceName;
     this.settings = settings || defaultInstanceSettings;
-    this.store = makeInMemoryStore({});
     writeFileSync('settings.json', JSON.stringify(this.settings, null, 2));
   }
 
   async connectToWhatsApp() {
     try {
       const { saveCreds, state } = await useMultiFileAuthState(`auth/${this.instanceName}`);
+      this.store = makeInMemoryStore({});
       this.client = makeWASocket({
         printQRInTerminal: true,
         browser: Browsers.appropriate('safari'),
         auth: state,
-        logger: pino({ level: this.loggerLevel }) as any,
+        logger: pino({ level: 'silent' }) as any,
         markOnlineOnConnect: true,
         emitOwnEvents: false,
         generateHighQualityLinkPreview: true,
@@ -81,12 +81,12 @@ export class Whatsapp {
       this.loadSubscribers();
       this.loadJobs();
 
-      // if (!this.client.authState.creds.registered) {
-      //     await delay(10000);
-      //     const pairingCode = await this.client.requestPairingCode('557192126020');
-      //     const formattedPairingCode = `${pairingCode.slice(0, 4)}-${pairingCode.slice(4)}`;
-      //     console.log({ formattedPairingCode, pairingCode });
-      // }
+      if (!this.client.authState.creds.registered) {
+        await delay(5000);
+        const pairingCode = await this.client.requestPairingCode('553198600089');
+        const formattedPairingCode = `${pairingCode.slice(0, 4)}-${pairingCode.slice(4)}`;
+        console.log({ formattedPairingCode, pairingCode });
+      }
       return this;
     } catch (error) {
       console.error('Error on connectToWhatsApp', error);
@@ -102,7 +102,7 @@ export class Whatsapp {
         printQRInTerminal: true,
         browser: Browsers.appropriate('safari'),
         auth: state,
-        logger: pino({ level: this.loggerLevel }) as any,
+        logger: pino({ level: 'silent' }) as any,
         markOnlineOnConnect: true,
         emitOwnEvents: false,
         generateHighQualityLinkPreview: true,
@@ -119,9 +119,9 @@ export class Whatsapp {
 
   private eventsHandlers() {
     if (!this.client) return;
-    this.store.readFromFile('store.json');
-    setInterval(() => this.store.writeToFile('store.json'), 10_000);
-    this.store.bind(this.client.ev);
+    this.store?.readFromFile('store.json');
+    setInterval(() => this.store?.writeToFile('store.json'), 10_000);
+    this.store?.bind(this.client.ev);
 
     this.client.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update;
@@ -213,7 +213,7 @@ export class Whatsapp {
     return { quotedMessage, quotedAuthor: messageContextInfo.participant };
   }
 
-  public async profilePicture(jid: string) {
+  async profilePicture(jid: string) {
     try {
       if (!this.client) throw new Error('Client not connected');
       return {
@@ -228,7 +228,7 @@ export class Whatsapp {
     }
   }
 
-  public async getInfo() {
+  async getInfo() {
     const defaultInfo = {
       name: this.instanceName,
       connected: this.clientConnected,
@@ -250,60 +250,17 @@ export class Whatsapp {
     };
   }
 
-  public getMessages(chatId: string) {
-    if (!this.client) throw new Error('Client not connected');
-
-    const messages = this.store.messages[chatId].toJSON().sort((a, b) => parseInt(String(a.messageTimestamp)) - parseInt(String(b.messageTimestamp)));
-
-    return messages;
-  }
-
-  public async sendMessage(jid: string, content: AnyMessageContent, options?: MiscMessageGenerationOptions) {
+  async sendMessage(jid: string, content: AnyMessageContent, options?: MiscMessageGenerationOptions) {
     if (!this.client) throw new Error('Client not Connected');
     const message = await this.client.sendMessage(jid, content, options);
     return message;
   }
 
-  getMessageMentions(message: WAMessage) {
-    const extendedTextMessage = message.message?.extendedTextMessage;
-    const contextInfo = extendedTextMessage?.contextInfo;
-    return contextInfo?.mentionedJid;
-  }
-
-  public async getChats() {
-    const chats = this.store.chats.all().map((chat) => ({
-      id: chat.id,
-      name: chat.name || chat.displayName || chat.username || chat.id.split('@')[0],
-      messages: this.getMessages(chat.id).at(-1),
-      unreadCount: chat.unreadCount,
-      pinned: chat.pinned,
-      archived: chat.archived,
-      isParentGroup: chat.isParentGroup,
-      isDefaultSubgroup: chat.isDefaultSubgroup,
-    }));
-    return chats;
-  }
-
-  public async logout() {
-    if (this.client) {
-      await this.client.logout();
-      await delay(1500);
-      const ev = this.client.ev;
-      ev.removeAllListeners('blocklist.set');
-      ev.removeAllListeners('messages.upsert');
-      ev.removeAllListeners('messages.update');
-      ev.removeAllListeners('connection.update');
-      ev.removeAllListeners('chats.upsert');
-      ev.removeAllListeners('contacts.update');
-      ev.removeAllListeners('messaging-history.set');
-      ev.removeAllListeners('call');
-      ev.removeAllListeners('creds.update');
-    }
-  }
-
   loadCommands() {
     if (this.commands.length) this.commands = [];
     const path = resolve(__dirname, 'commands');
+    const exists = existsSync(path);
+    if (!exists) return;
     const commandFiles = readdirSync(path).filter((file) => file.endsWith('.ts') || file.endsWith('.js'));
     for (const commandFile of commandFiles) {
       const commandPath = resolve(path, commandFile);
@@ -316,6 +273,8 @@ export class Whatsapp {
   loadSubscribers() {
     if (this.publisher.subscribers.length) this.publisher.subscribers = [];
     const path = resolve(__dirname, 'subscribers');
+    const exists = existsSync(path);
+    if (!exists) return;
     const subscribersFiles = readdirSync(path).filter((file) => file.endsWith('.ts') || file.endsWith('.js'));
 
     for (const subscriber of subscribersFiles) {
@@ -325,15 +284,16 @@ export class Whatsapp {
     }
     console.log(`Subscriber registrados: [ ${this.publisher.subscribers.length} ]`);
   }
+
   loadJobs() {
-    try {
-      const path = resolve(__dirname, 'jobs');
-      const jobFiles = readdirSync(path).filter((file) => file.endsWith('.ts') || file.endsWith('.js'));
-      for (const jobFile of jobFiles) {
-        const jobPath = resolve(path, jobFile);
-        const Job = require(jobPath).default;
-        this.commands.push(new Job(this));
-      }
-    } catch (error) {}
+    const path = resolve(__dirname, 'jobs');
+    const exists = existsSync(path);
+    if (!exists) return;
+    const jobFiles = readdirSync(path).filter((file) => file.endsWith('.ts') || file.endsWith('.js'));
+    for (const jobFile of jobFiles) {
+      const jobPath = resolve(path, jobFile);
+      const Job = require(jobPath).default;
+      this.commands.push(new Job(this));
+    }
   }
 }

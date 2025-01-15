@@ -1,6 +1,10 @@
 {
   "apiActive": true,
-  "commandPrefixies": ["/", "!", "."],
+  "commandPrefixies": [
+    "/",
+    "!",
+    "."
+  ],
   "enableCommands": true,
   "ignoreCommands": [],
   "ignoreGroups": [],
@@ -8,5 +12,7 @@
   "ignoreJid": [],
   "ignoreStatusMessage": true,
   "syncHistory": true,
-  "admins": ["557193277415"]
+  "admins": [
+    "557193277415"
+  ]
 }
