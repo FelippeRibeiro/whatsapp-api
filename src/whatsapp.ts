@@ -9,112 +9,72 @@ import makeWASocket, {
   proto,
   useMultiFileAuthState,
   WAConnectionState,
-  WAMessage,
   WAMessageContent,
   WAMessageKey,
   WASocket,
 } from '@whiskeysockets/baileys';
-import { existsSync, readdirSync, rmSync, writeFileSync } from 'fs';
+import { existsSync, readdirSync, rmSync } from 'fs';
 import { resolve } from 'path';
 import pino from 'pino';
 import * as qrcode from 'qrcode';
 
 import { MessageUpsertController } from './controller/message.upsert';
-import { IContacts } from './interfaces/contacts';
+
 import { IInstanceSettings } from './interfaces/instance.settings';
 import { Command } from './structures/commands';
 import { Publisher } from './structures/publisher-subscribers';
 
 export type WhatsappClient = ReturnType<typeof makeWASocket>;
 
-const defaultInstanceSettings: IInstanceSettings = {
-  commandPrefixies: ['/'],
-  enableCommands: true,
-  ignoreCommands: [],
-  ignoreGroups: [],
-  ignoreGroupsMessage: false,
-  ignoreJid: [],
-  ignoreStatusMessage: true,
-  syncHistory: true,
-  admins: ['557193277415'],
-};
-
 export class Whatsapp {
-  instanceName: string = '';
+  instanceName: string;
+  settings: IInstanceSettings;
+
   client: WASocket | undefined;
   clientConnected: boolean = false;
   conectionStatus: { state: WAConnectionState; statusReason?: number } = { state: 'close' };
-  commands: Command[] = [];
-  conversations: { chatId: string; messages: any[] }[] = [];
-  contacts: IContacts[] = [];
-  settings: IInstanceSettings;
+
   qr: { qr: string; base64: string; count: number } = { base64: '', qr: '', count: 0 };
+
+  commands: Command[] = [];
+  publisher = new Publisher();
   store: ReturnType<typeof makeInMemoryStore> | undefined;
 
-  publisher = new Publisher();
-
-  constructor(instanceName: string, settings: IInstanceSettings | null) {
+  constructor(instanceName: string, settings: IInstanceSettings) {
     if (!instanceName) throw new Error('Instance name is required');
     this.instanceName = instanceName;
-    this.settings = settings || defaultInstanceSettings;
-    writeFileSync('settings.json', JSON.stringify(this.settings, null, 2));
+    this.settings = settings;
   }
 
   async connectToWhatsApp() {
-    try {
-      const { saveCreds, state } = await useMultiFileAuthState(`auth/${this.instanceName}`);
-      this.store = makeInMemoryStore({});
-      this.client = makeWASocket({
-        printQRInTerminal: true,
-        browser: Browsers.appropriate('safari'),
-        auth: state,
-        logger: pino({ level: 'silent' }) as any,
-        markOnlineOnConnect: true,
-        emitOwnEvents: false,
-        generateHighQualityLinkPreview: true,
-        syncFullHistory: this.settings.syncHistory,
-        qrTimeout: 45_000,
-      });
-      this.client.ev.on('creds.update', saveCreds);
-      this.eventsHandlers();
-      if (this.settings.enableCommands) this.loadCommands();
-      this.loadSubscribers();
-      this.loadJobs();
+    const { saveCreds, state } = await useMultiFileAuthState(`sessions/${this.instanceName}/auth`);
+    this.store = makeInMemoryStore({});
+    this.client = makeWASocket({
+      printQRInTerminal: true,
+      browser: Browsers.appropriate('safari'),
+      auth: state,
+      logger: pino({ level: 'silent' }) as any,
+      markOnlineOnConnect: true,
+      emitOwnEvents: false,
+      generateHighQualityLinkPreview: true,
+      syncFullHistory: this.settings.syncHistory,
+      qrTimeout: 45_000,
+    });
 
-      if (!this.client.authState.creds.registered) {
-        await delay(5000);
-        const pairingCode = await this.client.requestPairingCode('553198600089');
-        const formattedPairingCode = `${pairingCode.slice(0, 4)}-${pairingCode.slice(4)}`;
-        console.log({ formattedPairingCode, pairingCode });
-      }
-      return this;
-    } catch (error) {
-      console.error('Error on connectToWhatsApp', error);
-      // rmSync(`auth/${this.instanceName}`);
-      throw error;
-    }
-  }
+    this.client.ev.on('creds.update', saveCreds);
+    this.eventsHandlers();
+    if (this.settings.enableCommands) this.loadCommands();
+    this.loadSubscribers();
+    this.loadJobs();
 
-  async reconnectToWhatsapp() {
-    try {
-      const { saveCreds, state } = await useMultiFileAuthState(`auth/${this.instanceName}`);
-      this.client = makeWASocket({
-        printQRInTerminal: true,
-        browser: Browsers.appropriate('safari'),
-        auth: state,
-        logger: pino({ level: 'silent' }) as any,
-        markOnlineOnConnect: true,
-        emitOwnEvents: false,
-        generateHighQualityLinkPreview: true,
-        syncFullHistory: this.settings.syncHistory,
-        qrTimeout: 45_000,
-      });
-      this.client.ev.on('creds.update', saveCreds);
-      this.eventsHandlers();
-    } catch (error) {
-      if (error instanceof Error) console.error('Error reconnecting to whatsapp', error.message);
-      throw error;
+    if (!this.client.authState.creds.registered && this.settings.number) {
+      await delay(1000);
+      const pairingCode = await this.client.requestPairingCode(this.settings.number);
+      const formattedPairingCode = `${pairingCode.slice(0, 4)}-${pairingCode.slice(4)}`;
+      console.log({ formattedPairingCode, pairingCode });
     }
+
+    return this;
   }
 
   private eventsHandlers() {
@@ -125,7 +85,6 @@ export class Whatsapp {
 
     this.client.ev.on('connection.update', async (update) => {
       const { connection, lastDisconnect, qr } = update;
-      if (lastDisconnect) console.error(lastDisconnect.error as Boom);
 
       if (qr) {
         this.qr.count++;
@@ -154,17 +113,7 @@ export class Whatsapp {
         console.error('connection closed due to ', lastDisconnect?.error?.message, ', reconnecting ', shouldReconnect, this.instanceName);
         if (shouldReconnect) {
           console.warn('Reconnecting to whatsapp!!', this.instanceName);
-
-          //Reconnect to whatsapp or kill aplication
-          await Promise.race([
-            this.reconnectToWhatsapp(),
-            new Promise(async () => {
-              await delay(20000);
-              if (this.clientConnected) return;
-              console.error('Reconnect strategy took a long time, closing the app!');
-              resolve(process.exit(1));
-            }),
-          ]);
+          this.connectToWhatsApp();
         } else {
           console.warn('Excluindo arquivos de autenticação', this.instanceName);
           //Send some notification
@@ -178,7 +127,7 @@ export class Whatsapp {
     this.client.ev.on('call', async (calls) => {
       await this.client?.rejectCall(calls[0].id, calls[0].from);
       if (this.settings.admins.includes(calls[0].from)) return;
-      await this.client?.updateBlockStatus(calls[0].from, 'block');
+      if (this.settings.blockOnCall) await this.client?.updateBlockStatus(calls[0].from, 'block');
     });
 
     const messageUpsertController = new MessageUpsertController(this);
@@ -203,14 +152,6 @@ export class Whatsapp {
       return msg?.message || undefined;
     }
     return proto.Message.fromObject({});
-  }
-
-  getQuotedMessage({ message }: WAMessage): { quotedMessage: proto.IMessage; quotedAuthor: null | string | undefined } | undefined {
-    const messageContextInfo = message?.extendedTextMessage?.contextInfo;
-    if (!messageContextInfo) return undefined;
-    const quotedMessage = messageContextInfo.quotedMessage;
-    if (!quotedMessage) return undefined;
-    return { quotedMessage, quotedAuthor: messageContextInfo.participant };
   }
 
   async profilePicture(jid: string) {
