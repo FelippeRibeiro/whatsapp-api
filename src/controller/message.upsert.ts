@@ -7,6 +7,7 @@ import { getMessageBody } from '../utils/getBodyMessage';
 import { getMessageType } from '../utils/getMessageType';
 import { MessageCollector } from '../utils/messageCollector';
 import { Whatsapp } from '../whatsapp';
+import { getQuotedMessage } from '../utils/getQuotedMessage';
 
 export class MessageUpsertController {
   constructor(private instance: Whatsapp) {}
@@ -46,7 +47,7 @@ export class MessageUpsertController {
     // if (!messageBody) return; // Early return if the message has no text content, just media. validate by you own
     const authorNumber = author!.split('@')[0];
 
-    const messageQuoted = this.instance.getQuotedMessage(messageData);
+    const messageQuoted = getQuotedMessage(messageData);
 
     if (MessageCollector.messageCollectorMap.size) {
       if (MessageCollector.messageCollectorMap.has(author)) {
