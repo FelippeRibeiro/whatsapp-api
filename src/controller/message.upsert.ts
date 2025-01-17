@@ -1,7 +1,7 @@
 import { BufferJSON } from '@whiskeysockets/baileys';
 import { readFileSync } from 'fs';
 import { IHandleMessage } from '../interfaces/message.handler.interface';
-import { IMessageUpsertEventPayload } from '../interfaces/message.upsert.interface';
+import { IMessageUpsertController, IMessageUpsertEventPayload } from '../interfaces/message.upsert.interface';
 import { Queue } from '../structures/queue';
 import { getMessageBody } from '../utils/getBodyMessage';
 import { getMessageType } from '../utils/getMessageType';
@@ -9,8 +9,8 @@ import { MessageCollector } from '../utils/messageCollector';
 import { Whatsapp } from '../whatsapp';
 import { getQuotedMessage } from '../utils/getQuotedMessage';
 
-export class MessageUpsertController {
-  constructor(private instance: Whatsapp) {}
+export class MessageUpsertController implements IMessageUpsertController {
+  constructor(public instance: Whatsapp) {}
 
   async handleEvent(messagesUpsert: IMessageUpsertEventPayload) {
     //Test handling stub messages

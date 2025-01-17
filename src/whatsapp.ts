@@ -201,28 +201,26 @@ export class Whatsapp {
   loadCommands() {
     if (this.commands.length) this.commands = [];
     if (this.settings.ownCommands || this.settings.baseCommands) {
-      const path = resolve(__dirname, 'commands');
-      const baseCommandsPath = resolve(path);
+      const commandsPath = resolve(__dirname, 'commands');
 
-      if (this.settings.ownCommands && existsSync(join(path, this.instanceName))) {
-        const commandFiles = readdirSync(join(path, this.instanceName)).filter((file) => file.endsWith('.ts') || file.endsWith('.js'));
+      if (this.settings.ownCommands && existsSync(join(commandsPath, this.instanceName))) {
+        const commandFiles = readdirSync(join(commandsPath, this.instanceName)).filter((file) => file.endsWith('.ts') || file.endsWith('.js'));
         for (const commandFile of commandFiles) {
-          const commandPath = resolve(path, this.instanceName, commandFile);
+          const commandPath = resolve(commandsPath, this.instanceName, commandFile);
           const Command = require(commandPath).default;
           this.commands.push(new Command(this));
         }
       }
-      console.log(this.settings.baseCommands);
 
-      if (this.settings.baseCommands && existsSync(baseCommandsPath)) {
-        const commandFiles = readdirSync(baseCommandsPath).filter((file) => file.endsWith('.ts') || file.endsWith('.js'));
+      if (this.settings.baseCommands && existsSync(commandsPath)) {
+        const commandFiles = readdirSync(commandsPath).filter((file) => file.endsWith('.ts') || file.endsWith('.js'));
         for (const commandFile of commandFiles) {
           //Excluding base commands specified
           const commandName = commandFile.split('.')[0];
           if (this.settings.excludeBaseCommands.includes(commandName)) continue;
           if (this.commands.find((cmd) => cmd.name === commandName)) continue;
 
-          const commandPath = resolve(baseCommandsPath, commandFile);
+          const commandPath = resolve(commandsPath, commandFile);
           const Command = require(commandPath).default;
           this.commands.push(new Command(this));
         }
