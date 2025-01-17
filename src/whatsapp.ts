@@ -79,8 +79,8 @@ export class Whatsapp {
 
   private eventsHandlers() {
     if (!this.client) return;
-    this.store?.readFromFile('store.json');
-    setInterval(() => this.store?.writeToFile('store.json'), 10_000);
+    this.store?.readFromFile(`sessions/${this.instanceName}/store.json`);
+    setInterval(() => this.store?.writeToFile(`sessions/${this.instanceName}/store.json`), 10_000);
     this.store?.bind(this.client.ev);
 
     this.client.ev.on('connection.update', async (update) => {
