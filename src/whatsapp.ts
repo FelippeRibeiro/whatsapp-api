@@ -80,7 +80,7 @@ export class Whatsapp {
   private eventsHandlers() {
     if (!this.client) return;
     this.store?.readFromFile(`sessions/${this.instanceName}/store.json`);
-    setInterval(() => this.store?.writeToFile(`sessions/${this.instanceName}/store.json`), 10_000);
+    setInterval(() => this.store?.writeToFile(`sessions/${this.instanceName}/store.json`), 60_000);
     this.store?.bind(this.client.ev);
 
     this.client.ev.on('connection.update', async (update) => {
@@ -109,6 +109,7 @@ export class Whatsapp {
       if (connection === 'close') {
         this.clientConnected = false;
         const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
+        this.store?.writeToFile(`sessions/${this.instanceName}/store.json`);
 
         console.error('connection closed due to ', lastDisconnect?.error?.message, ', reconnecting ', shouldReconnect, this.instanceName);
         if (shouldReconnect) {
