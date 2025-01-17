@@ -19,7 +19,9 @@ export default class PingCommand extends Command {
     await this.instance.client?.sendMessage(
       chatJid,
       {
-        text: 'Pong!',
+        text: `🏓 ${messageBody.includes('ping') ? 'Pong!' : 'Ping!'}\n\n🖥️ INFOS CPU:\nModelo: ${cpuInfo.model}\nCores: ${cpuInfo.cores}\nUso: ${cpuInfo.usage}%\n💾 Memória:\nTotal: ${
+          memoryInfo.total
+        }\nUso: ${memoryInfo.usage} (${memoryInfo.usagePercentual}%)`,
       },
       { quoted: messageData },
     );
