@@ -13,12 +13,12 @@ import makeWASocket, {
   WAMessageKey,
   WASocket,
 } from '@whiskeysockets/baileys';
-import { existsSync, readdirSync, rmSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 import pino from 'pino';
 import * as qrcode from 'qrcode';
 
-import { MessageUpsertController } from './controller/message.upsert';
+import { MessageUpsertController, baseMessageUpsertController } from './controller/message.upsert';
 
 import { IInstanceSettings } from './interfaces/instance.settings';
 import { Command } from './structures/commands';
@@ -77,7 +77,7 @@ export class Whatsapp {
     return this;
   }
 
-  private eventsHandlers() {
+  eventsHandlers() {
     if (!this.client) return;
     this.store?.readFromFile(`sessions/${this.instanceName}/store.json`);
     setInterval(() => this.store?.writeToFile(`sessions/${this.instanceName}/store.json`), 60_000);
@@ -131,7 +131,8 @@ export class Whatsapp {
       if (this.settings.blockOnCall) await this.client?.updateBlockStatus(calls[0].from, 'block');
     });
 
-    const messageUpsertController = new MessageUpsertController(this);
+    const messageUpsertController = this.setController();
+
     this.client.ev.on('messages.upsert', (update) => messageUpsertController.handleEvent(update).catch((err) => console.error('unhandled error on Handle event controller', err)));
   }
 
@@ -190,6 +191,21 @@ export class Whatsapp {
       photo: null,
       ...defaultInfo,
     };
+  }
+
+  setController() {
+    let messageUpsertController: MessageUpsertController;
+
+    if (!this.settings.ownController) messageUpsertController = new MessageUpsertController(this);
+    else {
+      if (!existsSync(join(__dirname, 'controller', this.instanceName))) {
+        mkdirSync(join(__dirname, 'controller', this.instanceName), { recursive: true });
+        writeFileSync(join(__dirname, 'controller', this.instanceName, 'message.upsert.ts'), baseMessageUpsertController);
+      }
+      const Controller = require(`${__dirname}/controller/${this.instanceName}/message.upsert.ts`).default;
+      messageUpsertController = new Controller();
+    }
+    return messageUpsertController;
   }
 
   async sendMessage(jid: string, content: AnyMessageContent, options?: MiscMessageGenerationOptions) {

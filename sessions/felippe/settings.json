@@ -1,7 +1,5 @@
 {
-  "commandPrefixies": [
-    "/"
-  ],
+  "commandPrefixies": ["/"],
   "enableCommands": true,
   "ignoreCommands": [],
   "ignoreGroups": [],
@@ -13,7 +11,7 @@
   "number": "",
   "qrCode": true,
   "blockOnCall": false,
-  "ownController": true,
+  "ownController": false,
   "baseCommands": true,
   "ownCommands": true,
   "excludeBaseCommands": []

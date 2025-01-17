@@ -109,3 +109,15 @@ export class MessageUpsertController implements IMessageUpsertController {
     this.instance.publisher.notifyAll({ author, chatJid, isGroup, messageBody, messageData, messageProps, messageType, messageQuoted }, this.instance);
   }
 }
+
+export const baseMessageUpsertController = `import { IMessageUpsertController, IMessageUpsertEventPayload } from '../../interfaces/message.upsert.interface';
+import { Whatsapp } from '../../whatsapp';
+
+export default class MessageUpsertController implements IMessageUpsertController {
+  constructor(public instance: Whatsapp) {}
+
+  async handleEvent(messagesUpsert: IMessageUpsertEventPayload): Promise<void> {
+    console.log('Foda');
+  }
+}
+`;

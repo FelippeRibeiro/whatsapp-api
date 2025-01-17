@@ -18,7 +18,7 @@ const defaultSetings: IInstanceSettings = {
   number: '',
   qrCode: true,
   blockOnCall: false,
-  ownController: true,
+  ownController: false,
   baseCommands: true,
   ownCommands: true,
   excludeBaseCommands: [],
@@ -99,6 +99,7 @@ class SessionsManager {
 
         client.instance.settings = neWsettings;
         client.instance.loadCommands();
+        client.instance.eventsHandlers();
         console.log(`Settings of ${name} applied`);
       }
     });
