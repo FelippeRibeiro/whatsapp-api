@@ -11,4 +11,8 @@ export interface IInstanceSettings {
   qrCode: boolean;
   number: string;
   blockOnCall?: boolean;
+  ownController: boolean;
+  baseCommands: true;
+  ownCommands: true;
+  excludeBaseCommands: string[];
 }

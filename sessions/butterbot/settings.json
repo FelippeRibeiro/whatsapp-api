@@ -1,13 +1,18 @@
 {
-  "apiActive": true,
-  "commandPrefixies": ["/", "!", "."],
-  "enableCommands": false,
+  "commandPrefixies": ["/"],
+  "enableCommands": true,
   "ignoreCommands": [],
   "ignoreGroups": [],
   "ignoreGroupsMessage": false,
   "ignoreJid": [],
   "ignoreStatusMessage": true,
   "syncHistory": true,
-  "admins": ["557193277415"],
-  "blockOnCall": false
+  "admins": [],
+  "number": "",
+  "qrCode": true,
+  "blockOnCall": false,
+  "ownController": true,
+  "baseCommands": true,
+  "ownCommands": false,
+  "excludeBaseCommands": []
 }

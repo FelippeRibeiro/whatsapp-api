@@ -18,10 +18,14 @@ const defaultSetings: IInstanceSettings = {
   number: '',
   qrCode: true,
   blockOnCall: false,
+  ownController: true,
+  baseCommands: true,
+  ownCommands: true,
+  excludeBaseCommands: [],
 };
 
 class SessionsManager {
-  actualSessions = new Map<string, { instance: Whatsapp; name: string; setting: IInstanceSettings }>();
+  actualSessions = new Map<string, { instance: Whatsapp; name: string }>();
 
   constructor(private sessionsPath: string) {
     if (!existsSync(this.sessionsPath)) {
@@ -48,7 +52,7 @@ class SessionsManager {
   async connectSessions(sessionsSettings: ISessionsSettings[]) {
     for await (const { name, setting } of sessionsSettings) {
       const client = await new Whatsapp(name, setting).connectToWhatsApp();
-      this.actualSessions.set(name, { instance: client, name, setting });
+      this.actualSessions.set(name, { instance: client, name });
       await client.waitForClientConnection();
     }
   }
@@ -64,7 +68,7 @@ class SessionsManager {
       const setting = JSON.parse(readFileSync(settingPath, { encoding: 'utf-8' }));
       this.watchSettinsChange(settingPath, session);
       const client = await new Whatsapp(session, setting).connectToWhatsApp();
-      this.actualSessions.set(session, { instance: client, name: session, setting });
+      this.actualSessions.set(session, { instance: client, name: session });
       await client.waitForClientConnection();
     }
   }
@@ -81,6 +85,7 @@ class SessionsManager {
           const session = this.actualSessions.has(filename) ? this.actualSessions.get(filename) : null;
           if (!session) return;
           session.instance.client?.logout('Intentional Logout');
+          this.actualSessions.delete(filename);
         }
       }
     });
@@ -91,8 +96,9 @@ class SessionsManager {
       if (this.actualSessions.has(name) && existsSync(filepath)) {
         const neWsettings = JSON.parse(readFileSync(filepath, { encoding: 'utf-8' })) as IInstanceSettings;
         const client = this.actualSessions.get(name)!;
-        client.setting = neWsettings;
+
         client.instance.settings = neWsettings;
+        client.instance.loadCommands();
         console.log(`Settings of ${name} applied`);
       }
     });

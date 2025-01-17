@@ -1,8 +1,8 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
-import { IHandleMessage } from '../interfaces/message.handler.interface';
-import { Command } from '../structures/commands';
-import { MessageCollector } from '../utils/messageCollector';
-import { Whatsapp } from '../whatsapp';
+import { IHandleMessage } from '../../interfaces/message.handler.interface';
+import { Command } from '../../structures/commands';
+import { MessageCollector } from '../../utils/messageCollector';
+import { Whatsapp } from '../../whatsapp';
 
 export default class SshCommand extends Command {
   server: ChildProcessWithoutNullStreams | undefined;

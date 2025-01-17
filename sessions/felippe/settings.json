@@ -1,6 +1,8 @@
 {
-  "commandPrefixies": ["/"],
-  "enableCommands": false,
+  "commandPrefixies": [
+    "/"
+  ],
+  "enableCommands": true,
   "ignoreCommands": [],
   "ignoreGroups": [],
   "ignoreGroupsMessage": false,
@@ -9,5 +11,10 @@
   "syncHistory": true,
   "admins": [],
   "number": "",
-  "qrCode": true
+  "qrCode": true,
+  "blockOnCall": false,
+  "ownController": true,
+  "baseCommands": true,
+  "ownCommands": true,
+  "excludeBaseCommands": []
 }

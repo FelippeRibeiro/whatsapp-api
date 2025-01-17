@@ -1,7 +1,7 @@
 import { cpu, currentLoad, mem } from 'systeminformation';
-import { IHandleMessage } from '../interfaces/message.handler.interface';
-import { Command } from '../structures/commands';
-import { Whatsapp } from '../whatsapp';
+import { IHandleMessage } from '../../interfaces/message.handler.interface';
+import { Command } from '../../structures/commands';
+import { Whatsapp } from '../../whatsapp';
 
 export default class PingCommand extends Command {
   constructor(instance: Whatsapp) {
