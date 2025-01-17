@@ -76,7 +76,7 @@ export class MessageUpsertController implements IMessageUpsertController {
         try {
           if (command.developerOnly && !this.instance.settings.admins.includes(author.split('@')[0])) return;
           if (command.onlyGroup && !chatJid.includes('@g.us')) {
-            this.instance.client?.sendMessage(chatJid, { text: 'Somente em grupos!' }).catch();
+            //Handle if command is only to groups
             return;
           }
           if (command.onlyGroupAdmin && chatJid.includes('@g.us')) {
@@ -85,16 +85,7 @@ export class MessageUpsertController implements IMessageUpsertController {
             const participant = groupData.participants.find((participant) => participant.id === author);
             if (!participant) return;
             if (participant.admin !== 'admin' && participant.admin !== 'superadmin') {
-              await this.instance.client
-                ?.sendMessage(
-                  chatJid,
-                  {
-                    video: readFileSync('static/tu ne nada.mp4'),
-                    caption: 'Somente para adminstradores!',
-                  },
-                  { quoted: messageData },
-                )
-                .catch();
+              //Handle if user isnt a admin
               return;
             }
           }
