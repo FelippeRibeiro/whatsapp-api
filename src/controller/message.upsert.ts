@@ -13,14 +13,6 @@ export class MessageUpsertController implements IMessageUpsertController {
   constructor(public instance: Whatsapp) {}
 
   async handleEvent(messagesUpsert: IMessageUpsertEventPayload) {
-    //Test handling stub messages
-    const messageStubParameters = messagesUpsert.messages[0].messageStubParameters;
-    const isMessageAbsent = messageStubParameters?.[0] === 'Message absent from node';
-    if (isMessageAbsent && messageStubParameters?.[1]) {
-      const messageAck = JSON.parse(messageStubParameters[1], BufferJSON.reviver);
-      await this.instance.client?.sendMessageAck(messageAck);
-    }
-
     const messageData = messagesUpsert.messages[0];
 
     // Early return if the message has no message core or is from the bot
@@ -108,7 +100,7 @@ export default class MessageUpsertController implements IMessageUpsertController
   constructor(public instance: Whatsapp) {}
 
   async handleEvent(messagesUpsert: IMessageUpsertEventPayload): Promise<void> {
-    console.log('Foda');
+   
   }
 }
 `;
