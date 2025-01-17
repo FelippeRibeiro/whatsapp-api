@@ -4,7 +4,9 @@ const fs = require('fs');
 const path = require('path');
 
 // Obter o nome do comando do parâmetro passado
+
 const commandName = process.argv[2];
+const type = process.argv[3] || 'base';
 
 if (!commandName) {
   console.error('Por favor, forneça o nome do comando como argumento.');
@@ -38,8 +40,14 @@ export default class ${className}Command extends Command {
 }
 `;
 
+const commandPath = path.join(__dirname, 'src', 'commands');
 // Caminho onde o arquivo será criado
-const filePath = path.join(__dirname, 'src', 'commands', `${commandNameLowerCase}.ts`);
+if (type != 'base' && !fs.existsSync(path.join(commandPath, type))) {
+  console.error(`Pasta ${type} não existe.`);
+  process.exit(1);
+}
+
+const filePath = path.join(commandPath, type, `${commandNameLowerCase}.ts`);
 
 // Certifique-se de que a pasta existe
 fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -47,4 +55,4 @@ fs.mkdirSync(path.dirname(filePath), { recursive: true });
 // Escreve o conteúdo no arquivo
 fs.writeFileSync(filePath, fileContent.trim(), 'utf8');
 
-console.log(`Comando ${commandName} criado em ${filePath}`);
+console.log(`Comando base [ ${commandName} ] criado em ${filePath}`);
