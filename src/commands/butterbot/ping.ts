@@ -1,4 +1,3 @@
-import { cpu, currentLoad, mem } from 'systeminformation';
 import { IHandleMessage } from '../../interfaces/message.handler.interface';
 import { Command } from '../../structures/commands';
 import { Whatsapp } from '../../whatsapp';

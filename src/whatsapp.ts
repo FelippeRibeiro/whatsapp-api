@@ -202,7 +202,7 @@ export class Whatsapp {
     if (this.commands.length) this.commands = [];
     if (this.settings.ownCommands || this.settings.baseCommands) {
       const path = resolve(__dirname, 'commands');
-      const baseCommandsPath = resolve(path, 'base');
+      const baseCommandsPath = resolve(path);
 
       if (this.settings.ownCommands && existsSync(join(path, this.instanceName))) {
         const commandFiles = readdirSync(join(path, this.instanceName)).filter((file) => file.endsWith('.ts') || file.endsWith('.js'));

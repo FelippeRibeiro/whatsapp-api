@@ -17,11 +17,18 @@ if (!commandName) {
 const className = commandName.charAt(0).toUpperCase() + commandName.slice(1);
 const commandNameLowerCase = commandName.toLowerCase();
 
+const commandPath = path.join(__dirname, 'src', 'commands');
+// Caminho onde o arquivo será criado
+if (type != 'base' && !fs.existsSync(path.join(commandPath, type))) {
+  console.error(`Pasta ${type} não existe.`);
+  process.exit(1);
+}
+
 // Conteúdo do arquivo TypeScript
 const fileContent = `
-import { IHandleMessage } from '../interfaces/message.handler.interface';
-import { Command } from '../structures/commands';
-import { Whatsapp } from '../whatsapp';
+import { IHandleMessage } from '${type == 'base' ? '../' : '../../'}interfaces/message.handler.interface';
+import { Command } from '${type == 'base' ? '../' : '../../'}structures/commands';
+import { Whatsapp } from '${type == 'base' ? '../' : '../../'}whatsapp';
 
 export default class ${className}Command extends Command {
   constructor(instance: Whatsapp) {
@@ -40,14 +47,7 @@ export default class ${className}Command extends Command {
 }
 `;
 
-const commandPath = path.join(__dirname, 'src', 'commands');
-// Caminho onde o arquivo será criado
-if (type != 'base' && !fs.existsSync(path.join(commandPath, type))) {
-  console.error(`Pasta ${type} não existe.`);
-  process.exit(1);
-}
-
-const filePath = path.join(commandPath, type, `${commandNameLowerCase}.ts`);
+const filePath = type == 'base' ? path.join(commandPath, `${commandNameLowerCase}.ts`) : path.join(commandPath, type, `${commandNameLowerCase}.ts`);
 
 // Certifique-se de que a pasta existe
 fs.mkdirSync(path.dirname(filePath), { recursive: true });
