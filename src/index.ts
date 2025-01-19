@@ -30,7 +30,7 @@ class SessionsManager {
   constructor(private sessionsPath: string) {
     if (!existsSync(this.sessionsPath)) {
       mkdirSync(sessionsPath);
-      console.log('Nenhuma sessão encontrada nas pasta Sessions, crie uma pasta e um arquivo settings.json para começar uma nova sessão!');
+      console.log('Nenhuma sessão encontrada nas pasta Sessions\ncrie uma pasta com o nome da instancia e um arquivo settings.json para começar uma nova sessão!');
     }
     this.checkNewSessions();
 
@@ -38,7 +38,10 @@ class SessionsManager {
 
     const sessionsSettings = sessionsFolders.map((folder) => {
       const path = join(sessionsPath, folder, 'settings.json');
-      if (!existsSync(path)) writeFileSync(path, JSON.stringify(defaultSetings, undefined, 2));
+      if (!existsSync(path)) {
+        console.log(`Arquivo de configuração da instancia ${folder} não encontrado\nCriando arquivo com configuração padrão\nEdite em ${path}`);
+        writeFileSync(path, JSON.stringify(defaultSetings, undefined, 2));
+      }
       this.watchSettinsChange(path, folder);
       return {
         name: folder,
