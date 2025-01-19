@@ -81,6 +81,11 @@ export class Whatsapp {
 
   eventsHandlers() {
     if (!this.client) return;
+    //Cleanup
+    this.client.ev.removeAllListeners('call');
+    this.client.ev.removeAllListeners('connection.update');
+    this.client.ev.removeAllListeners('messages.upsert');
+
     this.store?.readFromFile(`sessions/${this.instanceName}/store.json`);
     setInterval(() => this.store?.writeToFile(`sessions/${this.instanceName}/store.json`), 60_000);
     this.store?.bind(this.client.ev);
