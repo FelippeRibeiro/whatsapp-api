@@ -27,9 +27,11 @@ class SessionsManager {
         writeFileSync(path, JSON.stringify(defaultSetings, undefined, 2));
       }
       this.watchSettinsChange(path, folder);
+      const setting = JSON.parse(readFileSync(path, { encoding: 'utf-8' }));
+
       return {
         name: folder,
-        setting: JSON.parse(readFileSync(path, { encoding: 'utf-8' })) as IInstanceSettings,
+        setting: InstanceSettingSchema.parse(setting),
       };
     });
 
@@ -90,6 +92,12 @@ class SessionsManager {
         console.log(`Settings of ${name} applied`);
       }
     });
+  }
+  createNewSession(instanceName: string, settings: IInstanceSettings = defaultSetings) {
+    if (existsSync(join(this.sessionsPath, instanceName))) throw new Error('Já existe uma instancia com esse nome');
+    mkdirSync(join(this.sessionsPath, instanceName));
+    writeFileSync(join(this.sessionsPath, instanceName, 'settings.json'), JSON.stringify(settings, undefined, 2));
+    return { instanceName, settings };
   }
 }
 
