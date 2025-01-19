@@ -1,28 +1,12 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, watch, watchFile, writeFileSync } from 'fs';
 import { Whatsapp } from './whatsapp';
-import { IInstanceSettings } from './interfaces/instance.settings';
+import { IInstanceSettings, InstanceSettingSchema } from './interfaces/instance.settings';
+import './interfaces/instance.settings';
 import { join } from 'path';
-import e from 'express';
+
 import { ISessionsSettings } from './interfaces/sessions';
 
-const defaultSetings: IInstanceSettings = {
-  commandPrefixies: ['/'],
-  enableCommands: true,
-  ignoreCommands: [],
-  ignoreGroups: [],
-  ignoreGroupsMessage: false,
-  ignoreJid: [],
-  ignoreStatusMessage: true,
-  syncHistory: true,
-  admins: [],
-  number: '',
-  qrCode: true,
-  blockOnCall: false,
-  ownController: false,
-  baseCommands: true,
-  ownCommands: true,
-  excludeBaseCommands: [],
-};
+const defaultSetings: IInstanceSettings = InstanceSettingSchema.parse({});
 
 class SessionsManager {
   actualSessions = new Map<string, { instance: Whatsapp; name: string }>();
