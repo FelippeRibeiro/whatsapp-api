@@ -23,6 +23,7 @@ import { MessageUpsertController, baseMessageUpsertController } from './controll
 import { IInstanceSettings } from './interfaces/instance.settings';
 import { Command } from './structures/commands';
 import { Publisher } from './structures/publisher-subscribers';
+import { MessageCollector } from './utils/messageCollector';
 
 export type WhatsappClient = ReturnType<typeof makeWASocket>;
 
@@ -38,6 +39,7 @@ export class Whatsapp {
 
   commands: Command[] = [];
   publisher = new Publisher();
+  messageCollector = new MessageCollector();
   store: ReturnType<typeof makeInMemoryStore> | undefined;
 
   constructor(instanceName: string, settings: IInstanceSettings) {
@@ -201,6 +203,7 @@ export class Whatsapp {
       if (!existsSync(join(__dirname, 'controller', this.instanceName))) {
         mkdirSync(join(__dirname, 'controller', this.instanceName), { recursive: true });
         writeFileSync(join(__dirname, 'controller', this.instanceName, 'message.upsert.ts'), baseMessageUpsertController);
+        console.log(`Creating a onw controller of ${this.instanceName} start editing in ${join(__dirname, 'controller', this.instanceName, 'message.upsert.ts')}`);
       }
       const Controller = require(`${__dirname}/controller/${this.instanceName}/message.upsert.ts`).default;
       messageUpsertController = new Controller();
