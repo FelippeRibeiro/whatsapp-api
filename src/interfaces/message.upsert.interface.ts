@@ -1,9 +1,10 @@
-import { MessageUpsertType, proto } from '@whiskeysockets/baileys';
+import { MessageUpsertType, WAMessage } from '@whiskeysockets/baileys';
 import { Whatsapp } from '../whatsapp';
 
 export interface IMessageUpsertEventPayload {
-  messages: proto.IWebMessageInfo[];
+  messages: WAMessage[];
   type: MessageUpsertType;
+  requestId?: string;
 }
 
 export interface IMessageUpsertController {

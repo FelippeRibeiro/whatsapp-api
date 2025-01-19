@@ -9,7 +9,7 @@ import { ISessionsSettings } from './interfaces/sessions';
 const defaultSetings: IInstanceSettings = InstanceSettingSchema.parse({});
 
 class SessionsManager {
-  actualSessions = new Map<string, { instance: Whatsapp; name: string }>();
+  instances = new Map<string, { instance: Whatsapp; name: string }>();
 
   constructor(private sessionsPath: string) {
     if (!existsSync(this.sessionsPath)) {
@@ -41,7 +41,7 @@ class SessionsManager {
   async connectSessions(sessionsSettings: ISessionsSettings[]) {
     for await (const { name, setting } of sessionsSettings) {
       const client = await new Whatsapp(name, setting).connectToWhatsApp();
-      this.actualSessions.set(name, { instance: client, name });
+      this.instances.set(name, { instance: client, name });
       await client.waitForClientConnection();
     }
   }
@@ -50,14 +50,14 @@ class SessionsManager {
     const sessionsFolders = readdirSync(sessionsPath);
 
     for (const session of sessionsFolders) {
-      if (this.actualSessions.has(session)) continue;
+      if (this.instances.has(session)) continue;
 
       const settingPath = join(sessionsPath, session, 'settings.json');
       if (!existsSync(settingPath)) writeFileSync(settingPath, JSON.stringify(defaultSetings, undefined, 2));
       const setting = JSON.parse(readFileSync(settingPath, { encoding: 'utf-8' }));
       this.watchSettinsChange(settingPath, session);
       const client = await new Whatsapp(session, setting).connectToWhatsApp();
-      this.actualSessions.set(session, { instance: client, name: session });
+      this.instances.set(session, { instance: client, name: session });
       await client.waitForClientConnection();
     }
   }
@@ -71,10 +71,10 @@ class SessionsManager {
           if (isDirectory) this.handleNewSession();
         } catch (error) {
           console.log(`Session deleted: ${filename}`);
-          const session = this.actualSessions.has(filename) ? this.actualSessions.get(filename) : null;
+          const session = this.instances.has(filename) ? this.instances.get(filename) : null;
           if (!session) return;
           session.instance.client?.logout('Intentional Logout');
-          this.actualSessions.delete(filename);
+          this.instances.delete(filename);
         }
       }
     });
@@ -82,9 +82,9 @@ class SessionsManager {
   watchSettinsChange(filepath: string, name: string) {
     watchFile(filepath, (cur, prev) => {
       console.log(`Settings changed ${name}`);
-      if (this.actualSessions.has(name) && existsSync(filepath)) {
+      if (this.instances.has(name) && existsSync(filepath)) {
         const neWsettings = JSON.parse(readFileSync(filepath, { encoding: 'utf-8' })) as IInstanceSettings;
-        const client = this.actualSessions.get(name)!;
+        const client = this.instances.get(name)!;
 
         client.instance.settings = neWsettings;
         client.instance.loadCommands();

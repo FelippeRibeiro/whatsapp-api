@@ -11,7 +11,7 @@
   "number": "",
   "qrCode": true,
   "blockOnCall": false,
-  "ownController": false,
+  "ownController": true,
   "baseCommands": true,
   "ownCommands": false,
   "excludeBaseCommands": []

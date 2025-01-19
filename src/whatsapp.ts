@@ -205,7 +205,7 @@ export class Whatsapp {
 
     if (!this.settings.ownController) messageUpsertController = new MessageUpsertController(this);
     else {
-      if (!existsSync(join(__dirname, 'controller', this.instanceName))) {
+      if (!existsSync(join(__dirname, 'controller', this.instanceName)) || !existsSync(join(__dirname, 'controller', this.instanceName, 'message.upsert.ts'))) {
         mkdirSync(join(__dirname, 'controller', this.instanceName), { recursive: true });
         writeFileSync(join(__dirname, 'controller', this.instanceName, 'message.upsert.ts'), baseMessageUpsertController);
         console.log(`Creating a onw controller of ${this.instanceName} start editing in ${join(__dirname, 'controller', this.instanceName, 'message.upsert.ts')}`);
