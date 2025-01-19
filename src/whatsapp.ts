@@ -206,7 +206,7 @@ export class Whatsapp {
         console.log(`Creating a onw controller of ${this.instanceName} start editing in ${join(__dirname, 'controller', this.instanceName, 'message.upsert.ts')}`);
       }
       const Controller = require(`${__dirname}/controller/${this.instanceName}/message.upsert.ts`).default;
-      messageUpsertController = new Controller();
+      messageUpsertController = new Controller(this);
     }
     return messageUpsertController;
   }
