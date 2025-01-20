@@ -96,4 +96,7 @@ export class SessionsManager {
     writeFileSync(join(this.sessionsPath, instanceName, 'settings.json'), JSON.stringify(settings, undefined, 2));
     return { instanceName, settings };
   }
+  deleteSession() {}
+
+  stopSession() {}
 }
