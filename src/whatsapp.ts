@@ -4,6 +4,7 @@ import makeWASocket, {
   Browsers,
   delay,
   DisconnectReason,
+  fetchLatestBaileysVersion,
   makeInMemoryStore,
   MiscMessageGenerationOptions,
   proto,
@@ -53,7 +54,7 @@ export class Whatsapp {
     this.store = makeInMemoryStore({});
     this.client = makeWASocket({
       printQRInTerminal: true,
-      browser: Browsers.appropriate('safari'),
+      browser: Browsers.macOS('Desktop'),
       auth: state,
       logger: pino({ level: 'silent' }) as any,
       markOnlineOnConnect: true,
@@ -61,6 +62,7 @@ export class Whatsapp {
       generateHighQualityLinkPreview: true,
       syncFullHistory: this.settings.syncHistory,
       qrTimeout: 45_000,
+      version: (await fetchLatestBaileysVersion()).version,
     });
 
     this.client.ev.on('creds.update', saveCreds);
@@ -125,7 +127,7 @@ export class Whatsapp {
         } else {
           console.warn('Excluindo arquivos de autenticação', this.instanceName);
           //Send some notification
-          rmSync('auth', { recursive: true, force: true });
+          rmSync(`sessions/${this.instanceName}/auth`, { recursive: true, force: true });
           if (lastDisconnect?.error?.message !== 'Intentional Logout') this.connectToWhatsApp();
         }
       }
