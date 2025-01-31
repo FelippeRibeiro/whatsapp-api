@@ -41,6 +41,7 @@ export class SendMessageController {
       return res.status(204).send();
     } catch (error) {
       if (error instanceof ZodError) res.status(400).send({ message: 'Invalid Body', status: 400, errors: JSON.parse(error.message) });
+      if (error instanceof Error) res.status(500).send({ message: error.message });
     }
   }
 }

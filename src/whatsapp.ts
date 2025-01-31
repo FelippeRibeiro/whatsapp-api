@@ -108,7 +108,7 @@ export class Whatsapp {
       }
       if (connection === 'open') {
         this.clientConnected = true;
-        console.log(`Conectado!`, this.instanceName);
+        console.log(`✅ Conectado`, this.instanceName, '\n');
       }
 
       if (connection === 'close') {
@@ -127,7 +127,7 @@ export class Whatsapp {
           if (lastDisconnect?.error?.message !== 'Intentional Logout') this.connectToWhatsApp();
         }
       }
-      if (connection === 'connecting') console.log('Conectando', this.instanceName);
+      if (connection === 'connecting') console.log('🔄 Conectando', this.instanceName);
     });
 
     this.client.ev.on('call', async (calls) => {
@@ -248,7 +248,7 @@ export class Whatsapp {
         }
       }
 
-      console.log(`Comandos carregados: [${this.commands.map((c) => c.name)}]`);
+      console.log(`📜 Comandos carregados: [${this.commands.map((c) => c.name)}]`);
     }
   }
 
@@ -264,7 +264,7 @@ export class Whatsapp {
       const SubscriberClass = require(subscriberPath).default;
       this.publisher.addSubscriber(new SubscriberClass(this));
     }
-    console.log(`Subscriber registrados: [ ${this.publisher.subscribers.length} ]`);
+    console.log(`📢 Subscriber registrados: [ ${this.publisher.subscribers.length} ]`);
   }
 
   loadJobs() {

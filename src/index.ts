@@ -17,7 +17,7 @@ async function bootstrap() {
   app.use('/message', sendMessageModule.router);
 
   app.listen(process.env.PORT || 3333, () => {
-    console.log(`Server listening on port ${process.env.PORT}`);
+    console.log(`🚩 Server listening on port ${process.env.PORT}`);
   });
 }
 
