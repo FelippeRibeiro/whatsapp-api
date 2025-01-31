@@ -32,9 +32,9 @@ export class SendMessageController {
       const payload = ZSendMessageBody.parse(req.body);
       const { errors, sucess } = await this.sendMessageService.sendTextMessage(instance, payload);
 
-      if (sucess.length && !errors.length) return res.status(200).send(sucess);
+      if (sucess.length && !errors.length) return res.status(200).send({ sucess });
 
-      if (!sucess.length && errors.length) return res.status(400).send(errors);
+      if (!sucess.length && errors.length) return res.status(400).send({ errors });
 
       if (sucess.length && errors.length) return res.status(207).json({ sucess, errors });
 
