@@ -18,7 +18,7 @@ import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 import pino from 'pino';
 import * as qrcode from 'qrcode';
-
+import * as qrTerminal from 'qrcode-terminal';
 import { MessageUpsertController, baseMessageUpsertController } from './controller/message.upsert';
 
 import { IInstanceSettings } from './interfaces/instance.settings';
@@ -71,13 +71,6 @@ export class Whatsapp {
     this.loadSubscribers();
     this.loadJobs();
 
-    if (!this.client.authState.creds.registered && this.settings.number) {
-      await delay(1000);
-      const pairingCode = await this.client.requestPairingCode(this.settings.number);
-      const formattedPairingCode = `${pairingCode.slice(0, 4)}-${pairingCode.slice(4)}`;
-      console.log({ formattedPairingCode, pairingCode });
-    }
-
     return this;
   }
 
@@ -102,6 +95,9 @@ export class Whatsapp {
           if (err) return;
           this.qr.base64 = url;
         });
+        console.log(`🔹 Escaneie o QR Code abaixo ${this.instanceName}`);
+        qrTerminal.generate(qr, { small: true });
+        console.log(`🔹 Sessão do QR Code acima: ${this.instanceName}`);
       }
 
       if (connection) {
