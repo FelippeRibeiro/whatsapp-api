@@ -1,4 +1,4 @@
-import { MessageType, proto } from '@whiskeysockets/baileys';
+import { MessageType, proto } from 'baileys';
 
 export function getMessageType(message: proto.IMessage) {
   return Object.keys(message)[0] as MessageType;

@@ -1,4 +1,4 @@
-import { MessageUpsertType, WAMessage } from '@whiskeysockets/baileys';
+import { MessageUpsertType, WAMessage } from 'baileys';
 import { Whatsapp } from '../whatsapp';
 
 export interface IMessageUpsertEventPayload {

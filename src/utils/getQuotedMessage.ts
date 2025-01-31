@@ -1,4 +1,4 @@
-import { proto, WAMessage } from '@whiskeysockets/baileys';
+import { proto, WAMessage } from 'baileys';
 
 export function getQuotedMessage({ message }: WAMessage): { quotedMessage: proto.IMessage; quotedAuthor: null | string | undefined } | undefined {
   const messageContextInfo = message?.extendedTextMessage?.contextInfo;

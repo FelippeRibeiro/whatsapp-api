@@ -1,48 +1,49 @@
-import { proto } from '@whiskeysockets/baileys';
+import { proto } from 'baileys';
 
 export function getMessageBody(message: proto.IMessage): string {
-    let body = '';
+  let body = '';
 
-    if ('conversation' in message) body = message.conversation ?? '';
+  if ('conversation' in message) body = message.conversation ?? '';
 
-    if ('extendedTextMessage' in message && !body) body = message.extendedTextMessage?.text ?? '';
+  if ('extendedTextMessage' in message && !body) body = message.extendedTextMessage?.text ?? '';
 
-    if ('imageMessage' in message && !body) body = message.imageMessage?.caption ?? '';
+  if ('imageMessage' in message && !body) body = message.imageMessage?.caption ?? '';
 
-    if ('videoMessage' in message && !body) body = message.videoMessage?.caption ?? '';
+  if ('videoMessage' in message && !body) body = message.videoMessage?.caption ?? '';
 
-    if ('documentMessage' in message && !body) body = message.documentMessage?.caption ?? '';
+  if ('documentMessage' in message && !body) body = message.documentMessage?.caption ?? '';
 
-    if ('buttonsResponseMessage' in message && !body) body = message.buttonsResponseMessage?.selectedButtonId ?? '';
+  if ('buttonsResponseMessage' in message && !body) body = message.buttonsResponseMessage?.selectedButtonId ?? '';
 
-    if ('listResponseMessage' in message && !body) body = message.listResponseMessage?.singleSelectReply?.selectedRowId ?? '';
+  if ('listResponseMessage' in message && !body) body = message.listResponseMessage?.singleSelectReply?.selectedRowId ?? '';
 
-    if ('templateButtonReplyMessage' in message && !body) body = message.templateButtonReplyMessage?.selectedId ?? '';
+  if ('templateButtonReplyMessage' in message && !body) body = message.templateButtonReplyMessage?.selectedId ?? '';
 
-    if ('messageContextInfo' in message && !body)
-        body =
-            message.buttonsResponseMessage?.selectedButtonId ||
-            message.listResponseMessage?.singleSelectReply?.selectedRowId ||
-            message.conversation ||
-            message.viewOnceMessage?.message?.imageMessage?.caption ||
-            message.viewOnceMessage?.message?.videoMessage?.caption ||
-            message.viewOnceMessageV2?.message?.videoMessage?.caption ||
-            message.viewOnceMessageV2?.message?.imageMessage?.caption ||
-            message.viewOnceMessageV2Extension?.message?.imageMessage?.caption ||
-            message.viewOnceMessageV2Extension?.message?.videoMessage?.caption ||
-            message.extendedTextMessage?.text ||
-            '';
+  if ('messageContextInfo' in message && !body)
+    body =
+      message.buttonsResponseMessage?.selectedButtonId ||
+      message.listResponseMessage?.singleSelectReply?.selectedRowId ||
+      message.conversation ||
+      message.viewOnceMessage?.message?.imageMessage?.caption ||
+      message.viewOnceMessage?.message?.videoMessage?.caption ||
+      message.viewOnceMessageV2?.message?.videoMessage?.caption ||
+      message.viewOnceMessageV2?.message?.imageMessage?.caption ||
+      message.viewOnceMessageV2Extension?.message?.imageMessage?.caption ||
+      message.viewOnceMessageV2Extension?.message?.videoMessage?.caption ||
+      message.extendedTextMessage?.text ||
+      '';
 
-    if ('viewOnceMessage' in message && !body) body = message.viewOnceMessage?.message?.imageMessage?.caption || message.viewOnceMessage?.message?.videoMessage?.caption || '';
+  if ('viewOnceMessage' in message && !body) body = message.viewOnceMessage?.message?.imageMessage?.caption || message.viewOnceMessage?.message?.videoMessage?.caption || '';
 
-    if ('viewOnceMessageV2' in message && !body) body = message.viewOnceMessageV2?.message?.imageMessage?.caption || message.viewOnceMessageV2?.message?.videoMessage?.caption || '';
+  if ('viewOnceMessageV2' in message && !body) body = message.viewOnceMessageV2?.message?.imageMessage?.caption || message.viewOnceMessageV2?.message?.videoMessage?.caption || '';
 
-    if ('viewOnceMessageV2Extension' in message && !body) body = message.viewOnceMessageV2Extension?.message?.imageMessage?.caption || message.viewOnceMessageV2Extension?.message?.videoMessage?.caption || '';
+  if ('viewOnceMessageV2Extension' in message && !body)
+    body = message.viewOnceMessageV2Extension?.message?.imageMessage?.caption || message.viewOnceMessageV2Extension?.message?.videoMessage?.caption || '';
 
-    return body;
+  return body;
 }
 
-// import { MessageType, proto } from '@whiskeysockets/baileys';
+// import { MessageType, proto } from 'baileys';
 
 // export function getMessageBody(message: proto.IMessage): string {
 //      // Checa se algum tipo de mensagem foi enviado e usa o primeiro tipo encontrado.

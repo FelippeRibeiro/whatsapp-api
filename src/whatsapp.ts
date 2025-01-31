@@ -1,8 +1,8 @@
 import { Boom } from '@hapi/boom';
 import makeWASocket, {
   AnyMessageContent,
+  AuthenticationState,
   Browsers,
-  delay,
   DisconnectReason,
   fetchLatestBaileysVersion,
   makeInMemoryStore,
@@ -13,7 +13,7 @@ import makeWASocket, {
   WAMessageContent,
   WAMessageKey,
   WASocket,
-} from '@whiskeysockets/baileys';
+} from 'baileys';
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 import pino from 'pino';

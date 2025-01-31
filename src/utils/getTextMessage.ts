@@ -1,4 +1,4 @@
-import { proto } from '@whiskeysockets/baileys';
+import { proto } from 'baileys';
 
 export const getTextContent = (msg: proto.IWebMessageInfo): string | null => {
   return msg?.message?.conversation

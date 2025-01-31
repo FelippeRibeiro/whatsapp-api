@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { Whatsapp } from '../../whatsapp';
-import { delay } from '@whiskeysockets/baileys';
+import { delay } from 'baileys';
 
 export async function awaitForInstanceConnect(req: Request, res: Response, next: NextFunction) {
   const instance = req.body.instance as Whatsapp;

@@ -1,4 +1,4 @@
-import { WAMessage } from '@whiskeysockets/baileys';
+import { WAMessage } from 'baileys';
 
 export function getMessageMentions(message: WAMessage) {
   const extendedTextMessage = message.message?.extendedTextMessage;
