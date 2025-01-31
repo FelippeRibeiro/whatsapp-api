@@ -30,8 +30,15 @@ export class SendMessageController {
     const instance = req.body.instance as Whatsapp;
     try {
       const payload = ZSendMessageBody.parse(req.body);
-      await this.sendMessageService.sendMessage(instance, payload);
-      return res.send('ok');
+      const { errors, sucess } = await this.sendMessageService.sendTextMessage(instance, payload);
+
+      if (sucess.length && !errors.length) return res.status(200).send(sucess);
+
+      if (!sucess.length && errors.length) return res.status(400).send(errors);
+
+      if (sucess.length && errors.length) return res.status(207).json({ sucess, errors });
+
+      return res.status(204).send();
     } catch (error) {
       if (error instanceof ZodError) res.status(400).send({ message: 'Invalid Body', status: 400, errors: JSON.parse(error.message) });
     }
