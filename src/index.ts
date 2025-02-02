@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { join } from 'path';
 import express from 'express';
+import bodyParser from 'body-parser';
 
 import { SessionsManager } from './structures/sessionsManager';
 import './interfaces/instance.settings';
@@ -11,7 +12,8 @@ async function bootstrap() {
   const sessionManager = new SessionsManager(join(__dirname, '..', 'sessions'));
 
   const app = express();
-  app.use(express.json());
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(bodyParser.json());
 
   const sendMessageModule = new SendMessageModule(sessionManager);
   app.use('/message', sendMessageModule.router);
